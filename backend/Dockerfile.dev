@@ -1,8 +1,8 @@
 # 開發模式 Dockerfile
 FROM node:18-alpine
 
-# 安裝 curl (用於健康檢查)
-RUN apk add --no-cache curl
+# 安裝 curl 和 openssl (用於健康檢查和 Prisma)
+RUN apk add --no-cache curl openssl openssl-dev
 
 # 設定工作目錄
 WORKDIR /app
@@ -15,6 +15,9 @@ RUN npm install
 
 # 複製應用程式碼
 COPY . .
+
+# 生成 Prisma Client
+RUN npx prisma generate
 
 # 建立 uploads 目錄
 RUN mkdir -p uploads

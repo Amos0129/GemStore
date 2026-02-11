@@ -66,12 +66,12 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/products', productRoutes)
-app.use('/api/cart', authMiddleware, cartRoutes)
-app.use('/api/orders', authMiddleware, orderRoutes)
-app.use('/api/wishlist', authMiddleware, wishlistRoutes)
-app.use('/api/addresses', authMiddleware, addressRoutes)
-app.use('/api/reviews', authMiddleware, reviewRoutes)
-app.use('/api/upload', authMiddleware, uploadRoutes)
+app.use('/api/cart', cartRoutes)
+app.use('/api/orders', orderRoutes)
+app.use('/api/wishlist', wishlistRoutes)
+app.use('/api/addresses', addressRoutes)
+app.use('/api/reviews', reviewRoutes)
+app.use('/api/upload', uploadRoutes)
 
 // Error handling middleware
 app.use(notFound)

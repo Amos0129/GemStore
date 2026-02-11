@@ -1,6 +1,6 @@
 import express from 'express'
-import { prisma } from '../lib/prisma.js'
-import { authMiddleware, adminOnly } from '../middleware/auth.js'
+import prisma from '../utils/prisma.js'
+import authMiddleware, { adminOnly } from '../middleware/auth.js'
 import Joi from 'joi'
 
 const router = express.Router()
