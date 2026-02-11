@@ -1,0 +1,298 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用戶表
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  firstName            String
+  lastName             String
+  password             String
+  phone                String?
+  avatar               String?
+  role                 Role      @default(CUSTOMER)
+  isActive             Boolean   @default(true)
+  passwordResetToken   String?
+  passwordResetExpiry  DateTime?
+  emailVerified        Boolean   @default(false)
+  emailVerifyToken     String?
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // 關聯
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+  wishlist  Wishlist[]
+  cart      CartItem[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+// 商品分類
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  image       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 關聯
+  products Product[]
+
+  @@map("categories")
+}
+
+// 商品表
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  shortDesc     String?
+  price         Float
+  originalPrice Float?
+  stock         Int      @default(0)
+  sku           String?  @unique
+  weight        Float?
+  dimensions    String?
+  isActive      Boolean  @default(true)
+  isFeatured    Boolean  @default(false)
+  badge         String? // 'new', 'hot', 'sale', 'limited'
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  salesCount    Int      @default(0)
+  views         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 外鍵
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  // 關聯
+  images    ProductImage[]
+  reviews   Review[]
+  cartItems CartItem[]
+  orderItems OrderItem[]
+  wishlist  Wishlist[]
+  tags      ProductTag[]
+
+  @@map("products")
+}
+
+// 商品圖片
+model ProductImage {
+  id       String @id @default(cuid())
+  url      String
+  alt      String?
+  sortOrder Int    @default(0)
+  
+  // 外鍵
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// 商品標籤
+model Tag {
+  id       String @id @default(cuid())
+  name     String @unique
+  color    String @default("#6B7280")
+  
+  products ProductTag[]
+
+  @@map("tags")
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@map("product_tags")
+}
+
+// 地址表
+model Address {
+  id         String  @id @default(cuid())
+  name       String  // 收件人姓名
+  phone      String
+  address    String
+  city       String
+  district   String?
+  postalCode String
+  isDefault  Boolean @default(false)
+  
+  // 外鍵
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 關聯
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// 訂單表
+model Order {
+  id           String      @id @default(cuid())
+  orderNumber  String      @unique
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float
+  shippingFee  Float       @default(0)
+  discount     Float       @default(0)
+  notes        String?
+  shippedAt    DateTime?
+  deliveredAt  DateTime?
+  cancelledAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // 外鍵
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  addressId String
+  address   Address @relation(fields: [addressId], references: [id])
+
+  // 關聯
+  items    OrderItem[]
+  payments Payment[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING     // 待付款
+  PAID        // 已付款
+  PROCESSING  // 處理中
+  SHIPPED     // 已出貨
+  DELIVERED   // 已送達
+  CANCELLED   // 已取消
+  REFUNDED    // 已退款
+}
+
+// 訂單項目
+model OrderItem {
+  id       String @id @default(cuid())
+  quantity Int
+  price    Float  // 當時的價格
+  
+  // 外鍵
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// 購物車
+model CartItem {
+  id       String @id @default(cuid())
+  quantity Int
+  addedAt  DateTime @default(now())
+  
+  // 外鍵
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+// 收藏清單
+model Wishlist {
+  id      String   @id @default(cuid())
+  addedAt DateTime @default(now())
+  
+  // 外鍵
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlist")
+}
+
+// 商品評價
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5 星評
+  title     String?
+  content   String?
+  images    String[] // 圖片URL陣列
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 外鍵
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // 每個用戶對每個商品只能評價一次
+  @@map("reviews")
+}
+
+// 付款記錄
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  transactionId String?       @unique
+  gatewayData   Json?         // 第三方支付資料
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // 外鍵
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CREDIT_CARD    // 信用卡
+  BANK_TRANSFER  // 銀行轉帳
+  LINE_PAY       // Line Pay
+  APPLE_PAY      // Apple Pay
+  CASH_ON_DELIVERY // 貨到付款
+}
+
+enum PaymentStatus {
+  PENDING    // 待付款
+  COMPLETED  // 已完成
+  FAILED     // 失敗
+  CANCELLED  // 已取消
+  REFUNDED   // 已退款
+}
