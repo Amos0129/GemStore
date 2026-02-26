@@ -22,60 +22,52 @@
 
     <!-- 關鍵指標卡片 -->
     <div class="stats-overview">
-      <el-row :gutter="20">
-        <el-col :span="6">
-          <el-card class="stat-card revenue">
-            <div class="stat-content">
-              <div class="stat-value">${{ stats.totalRevenue.toLocaleString() }}</div>
-              <div class="stat-label">總收入</div>
-              <div class="stat-change" :class="{ positive: stats.revenueChange > 0 }">
-                <el-icon><TrendCharts /></el-icon>
-                {{ stats.revenueChange > 0 ? '+' : '' }}{{ stats.revenueChange }}%
-              </div>
+      <div class="stats-grid">
+        <el-card class="stat-card revenue">
+          <div class="stat-content">
+            <div class="stat-value">${{ stats.totalRevenue.toLocaleString() }}</div>
+            <div class="stat-label">總收入</div>
+            <div class="stat-change" :class="{ positive: stats.revenueChange > 0 }">
+              <el-icon><TrendCharts /></el-icon>
+              {{ stats.revenueChange > 0 ? '+' : '' }}{{ stats.revenueChange }}%
             </div>
-            <el-icon class="stat-icon"><Money /></el-icon>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card orders">
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.totalOrders }}</div>
-              <div class="stat-label">總訂單數</div>
-              <div class="stat-change" :class="{ positive: stats.ordersChange > 0 }">
-                <el-icon><TrendCharts /></el-icon>
-                {{ stats.ordersChange > 0 ? '+' : '' }}{{ stats.ordersChange }}%
-              </div>
+          </div>
+          <el-icon class="stat-icon"><Money /></el-icon>
+        </el-card>
+        <el-card class="stat-card orders">
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.totalOrders }}</div>
+            <div class="stat-label">總訂單數</div>
+            <div class="stat-change" :class="{ positive: stats.ordersChange > 0 }">
+              <el-icon><TrendCharts /></el-icon>
+              {{ stats.ordersChange > 0 ? '+' : '' }}{{ stats.ordersChange }}%
             </div>
-            <el-icon class="stat-icon"><Document /></el-icon>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card avg-order">
-            <div class="stat-content">
-              <div class="stat-value">${{ stats.avgOrderValue }}</div>
-              <div class="stat-label">平均訂單金額</div>
-              <div class="stat-change" :class="{ positive: stats.avgChange > 0 }">
-                <el-icon><TrendCharts /></el-icon>
-                {{ stats.avgChange > 0 ? '+' : '' }}{{ stats.avgChange }}%
-              </div>
+          </div>
+          <el-icon class="stat-icon"><Document /></el-icon>
+        </el-card>
+        <el-card class="stat-card avg-order">
+          <div class="stat-content">
+            <div class="stat-value">${{ stats.avgOrderValue }}</div>
+            <div class="stat-label">平均訂單金額</div>
+            <div class="stat-change" :class="{ positive: stats.avgChange > 0 }">
+              <el-icon><TrendCharts /></el-icon>
+              {{ stats.avgChange > 0 ? '+' : '' }}{{ stats.avgChange }}%
             </div>
-            <el-icon class="stat-icon"><PieChart /></el-icon>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card profit">
-            <div class="stat-content">
-              <div class="stat-value">${{ stats.netProfit.toLocaleString() }}</div>
-              <div class="stat-label">淨利潤</div>
-              <div class="stat-change" :class="{ positive: stats.profitChange > 0 }">
-                <el-icon><TrendCharts /></el-icon>
-                {{ stats.profitChange > 0 ? '+' : '' }}{{ stats.profitChange }}%
-              </div>
+          </div>
+          <el-icon class="stat-icon"><PieChart /></el-icon>
+        </el-card>
+        <el-card class="stat-card profit">
+          <div class="stat-content">
+            <div class="stat-value">${{ stats.netProfit.toLocaleString() }}</div>
+            <div class="stat-label">淨利潤</div>
+            <div class="stat-change" :class="{ positive: stats.profitChange > 0 }">
+              <el-icon><TrendCharts /></el-icon>
+              {{ stats.profitChange > 0 ? '+' : '' }}{{ stats.profitChange }}%
             </div>
-            <el-icon class="stat-icon"><Trophy /></el-icon>
-          </el-card>
-        </el-col>
-      </el-row>
+          </div>
+          <el-icon class="stat-icon"><Trophy /></el-icon>
+        </el-card>
+      </div>
     </div>
 
     <!-- 圖表區域 -->
@@ -200,169 +192,230 @@ const pieChart = ref()
 
 // 統計數據
 const stats = ref({
-  totalRevenue: 328500,
-  revenueChange: 12.5,
-  totalOrders: 156,
-  ordersChange: 8.2,
-  avgOrderValue: 2108,
-  avgChange: 4.1,
-  netProfit: 98550,
-  profitChange: 15.3
+  totalRevenue: 0,
+  revenueChange: 0,
+  totalOrders: 0,
+  ordersChange: 0,
+  avgOrderValue: 0,
+  avgChange: 0,
+  netProfit: 0,
+  profitChange: 0
 })
 
 // 熱銷商品
-const topProducts = ref([
-  { name: '紫水晶能量項鍊', sales: 45, revenue: 126000 },
-  { name: '粉晶愛情手鍊', sales: 38, revenue: 63840 },
-  { name: '白水晶淨化戒指', sales: 32, revenue: 102400 },
-  { name: '黃水晶財運耳環', sales: 28, revenue: 50400 },
-  { name: '綠髮晶招財手鍊', sales: 25, revenue: 62500 }
-])
+const topProducts = ref([])
 
 // 月度對比
-const monthlyComparison = ref([
-  { month: '1月', revenue: 245000, orders: 118, growth: 8.2 },
-  { month: '2月', revenue: 328500, orders: 156, growth: 12.5 },
-  { month: '3月', revenue: 298000, orders: 142, growth: -3.5 },
-  { month: '4月', revenue: 367200, orders: 174, growth: 18.7 }
-])
+const monthlyComparison = ref([])
 
 // 支出數據
 const expenses = ref({
-  productCost: 196500,
+  productCost: 0,
   productCostPercentage: 60,
-  operatingCost: 65400,
+  operatingCost: 0,
   operatingCostPercentage: 20,
-  marketingCost: 32700,
+  marketingCost: 0,
   marketingCostPercentage: 10
 })
 
+// 載入財務統計
+const loadFinanceStats = async () => {
+  try {
+    const params = new URLSearchParams()
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.append('startDate', dateRange.value[0])
+      params.append('endDate', dateRange.value[1])
+    }
+
+    const response = await fetch(`http://localhost:5000/api/admin/finance/stats?${params}`)
+    const data = await response.json()
+    
+    if (data.success) {
+      stats.value = data.data
+      
+      // 計算支出數據
+      const totalRevenue = stats.value.totalRevenue
+      expenses.value.productCost = Math.round(totalRevenue * 0.4)
+      expenses.value.operatingCost = Math.round(totalRevenue * 0.2)
+      expenses.value.marketingCost = Math.round(totalRevenue * 0.1)
+    }
+  } catch (error) {
+    console.error('載入財務統計失敗:', error)
+  }
+}
+
+// 載入熱銷商品
+const loadTopProducts = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/finance/top-products')
+    const data = await response.json()
+    
+    if (data.success) {
+      topProducts.value = data.data
+    }
+  } catch (error) {
+    console.error('載入熱銷商品失敗:', error)
+  }
+}
+
+// 載入月度對比
+const loadMonthlyComparison = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/finance/monthly-comparison')
+    const data = await response.json()
+    
+    if (data.success) {
+      monthlyComparison.value = data.data
+    }
+  } catch (error) {
+    console.error('載入月度對比失敗:', error)
+  }
+}
+
 // 方法
-const updateData = () => {
+const updateData = async () => {
   ElMessage.info('數據已更新')
-  // 重新載入數據邏輯
+  await loadAllData()
   initCharts()
+}
+
+const loadAllData = async () => {
+  await Promise.all([
+    loadFinanceStats(),
+    loadTopProducts(),
+    loadMonthlyComparison()
+  ])
 }
 
 const exportReport = () => {
   ElMessage.success('報表匯出成功')
 }
 
-const initRevenueChart = () => {
-  const chartDom = revenueChart.value
-  const myChart = echarts.init(chartDom)
-  
-  const option = {
-    title: {
-      text: '收入趨勢',
-      left: 'center',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'normal'
-      }
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['收入', '訂單數'],
-      top: 30
-    },
-    xAxis: {
-      type: 'category',
-      data: ['1月', '2月', '3月', '4月', '5月', '6月']
-    },
-    yAxis: [
-      {
-        type: 'value',
-        name: '收入 ($)',
-        position: 'left'
-      },
-      {
-        type: 'value',
-        name: '訂單數',
-        position: 'right'
-      }
-    ],
-    series: [
-      {
-        name: '收入',
-        type: 'bar',
-        yAxisIndex: 0,
-        data: [245000, 328500, 298000, 367200, 312000, 289000],
-        itemStyle: {
-          color: '#409EFF'
+const initRevenueChart = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/finance/revenue-chart?type=monthly')
+    const data = await response.json()
+    
+    const chartDom = revenueChart.value
+    const myChart = echarts.init(chartDom)
+    
+    const option = {
+      title: {
+        text: '收入趨勢',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal'
         }
       },
-      {
-        name: '訂單數',
-        type: 'line',
-        yAxisIndex: 1,
-        data: [118, 156, 142, 174, 149, 138],
-        itemStyle: {
-          color: '#67C23A'
+      tooltip: {
+        trigger: 'axis'
+      },
+      legend: {
+        data: ['收入', '訂單數'],
+        top: 30
+      },
+      xAxis: {
+        type: 'category',
+        data: data.success ? data.data.labels : []
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: '收入 ($)',
+          position: 'left'
+        },
+        {
+          type: 'value',
+          name: '訂單數',
+          position: 'right'
         }
-      }
-    ]
-  }
-  
-  myChart.setOption(option)
-}
-
-const initPieChart = () => {
-  const chartDom = pieChart.value
-  const myChart = echarts.init(chartDom)
-  
-  const option = {
-    title: {
-      text: '銷售分佈',
-      left: 'center',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'normal'
-      }
-    },
-    tooltip: {
-      trigger: 'item'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left',
-      top: 'middle'
-    },
-    series: [
-      {
-        name: '銷售額',
-        type: 'pie',
-        radius: '50%',
-        data: [
-          { value: 126000, name: '項鍊' },
-          { value: 89500, name: '手鍊' },
-          { value: 67200, name: '戒指' },
-          { value: 45800, name: '耳環' }
-        ],
-        emphasis: {
+      ],
+      series: [
+        {
+          name: '收入',
+          type: 'bar',
+          yAxisIndex: 0,
+          data: data.success ? data.data.revenue : [],
           itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
+            color: '#409EFF'
+          }
+        },
+        {
+          name: '訂單數',
+          type: 'line',
+          yAxisIndex: 1,
+          data: data.success ? data.data.orders : [],
+          itemStyle: {
+            color: '#67C23A'
           }
         }
-      }
-    ]
+      ]
+    }
+    
+    myChart.setOption(option)
+  } catch (error) {
+    console.error('載入收入圖表失敗:', error)
   }
-  
-  myChart.setOption(option)
 }
 
-const initCharts = () => {
-  nextTick(() => {
-    initRevenueChart()
+const initPieChart = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/finance/category-distribution')
+    const data = await response.json()
+    
+    const chartDom = pieChart.value
+    const myChart = echarts.init(chartDom)
+    
+    const option = {
+      title: {
+        text: '銷售分佈',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal'
+        }
+      },
+      tooltip: {
+        trigger: 'item'
+      },
+      legend: {
+        orient: 'vertical',
+        left: 'left',
+        top: 'middle'
+      },
+      series: [
+        {
+          name: '銷售額',
+          type: 'pie',
+          radius: '50%',
+          data: data.success ? data.data : [],
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }
+      ]
+    }
+    
+    myChart.setOption(option)
+  } catch (error) {
+    console.error('載入銷售分佈圖表失敗:', error)
+  }
+}
+
+const initCharts = async () => {
+  await nextTick()
+  await Promise.all([
+    initRevenueChart(),
     initPieChart()
-  })
+  ])
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 設置默認日期範圍為當前月份
   const now = new Date()
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -373,7 +426,8 @@ onMounted(() => {
     lastDay.toISOString().split('T')[0]
   ]
   
-  initCharts()
+  await loadAllData()
+  await initCharts()
 })
 </script>
 
@@ -406,10 +460,22 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
+.stats-overview .el-row {
+  display: flex;
+  align-items: stretch;
+}
+
+.stats-overview .el-col {
+  display: flex;
+}
+
 .stat-card {
   position: relative;
   overflow: hidden;
-  height: 120px;
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
 }
 
 .stat-card.revenue {
@@ -431,31 +497,42 @@ onMounted(() => {
 .stat-content {
   z-index: 2;
   position: relative;
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 16px;
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--el-text-color-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
 }
 
 .stat-label {
   color: var(--el-text-color-regular);
   font-size: 14px;
   margin-bottom: 8px;
+  font-weight: 500;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .stat-change {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--el-color-danger);
+  min-height: 18px;
 }
 
 .stat-change.positive {

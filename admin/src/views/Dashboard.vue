@@ -143,6 +143,7 @@ import SalesChart from '@/components/charts/SalesChart.vue'
 import CategoryChart from '@/components/charts/CategoryChart.vue'
 
 // 響應式數據
+const loading = ref(false)
 const selectedPeriod = ref('7天')
 const stats = ref([
   {
@@ -299,10 +300,134 @@ const formatTime = (timeString) => {
   })
 }
 
+// 載入儀表板數據
+const loadDashboardData = async () => {
+  try {
+    loading.value = true
+    
+    // 暫時使用簡化的統計 (因為沒有訂單數據)
+    const mockStats = [
+      {
+        title: '商品總數',
+        value: 8,
+        prefix: '',
+        change: 0,
+        icon: ShoppingBag,
+        color: '#00d4ff',
+        bgColor: 'rgba(0, 212, 255, 0.2)'
+      },
+      {
+        title: '商品分類',
+        value: 5,
+        prefix: '',
+        change: 0,
+        icon: TrendCharts,
+        color: '#00ffaa',
+        bgColor: 'rgba(0, 255, 170, 0.2)'
+      },
+      {
+        title: '總庫存',
+        value: 115,
+        prefix: '',
+        change: 0,
+        icon: Clock,
+        color: '#ffaa00',
+        bgColor: 'rgba(255, 170, 0, 0.2)'
+      },
+      {
+        title: '低庫存提醒',
+        value: 0,
+        prefix: '',
+        change: 0,
+        icon: UserFilled,
+        color: '#8a2be2',
+        bgColor: 'rgba(138, 43, 226, 0.2)'
+      }
+    ]
+    
+    stats.value = mockStats
+    
+    // 載入商品數據用於圖表
+    const response = await fetch('http://localhost:5000/api/products')
+    const productsData = await response.json()
+    
+    if (productsData.success) {
+      const products = productsData.data
+      
+      // 更新統計
+      stats.value[0].value = products.length
+      const totalStock = products.reduce((sum, product) => sum + product.stock, 0)
+      stats.value[2].value = totalStock
+      
+      const lowStockCount = products.filter(product => product.stock <= product.lowStockThreshold || 10).length
+      stats.value[3].value = lowStockCount
+      
+      // 分類銷售數據
+      const categoryData = {}
+      products.forEach(product => {
+        const categoryName = product.category?.name || '未分類'
+        categoryData[categoryName] = (categoryData[categoryName] || 0) + product.stock
+      })
+      
+      categoryChartData.value = {
+        labels: Object.keys(categoryData),
+        datasets: [{
+          data: Object.values(categoryData),
+          backgroundColor: [
+            '#00d4ff', '#00ffaa', '#ffaa00', '#8a2be2', '#ff6b6b', '#4ecdc4'
+          ]
+        }]
+      }
+      
+      // 熱銷商品 (根據庫存倒序)
+      const sortedProducts = [...products]
+        .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0))
+        .slice(0, 5)
+      
+      topProducts.value = sortedProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        sales: product.salesCount || 0,
+        amount: (product.salesCount || 0) * parseFloat(product.price),
+        image: product.images?.[0]?.url || ''
+      }))
+      
+      // 簡單的銷售趨勢圖 (模擬數據)
+      const today = new Date()
+      const labels = []
+      const data = []
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today)
+        date.setDate(date.getDate() - i)
+        labels.push((date.getMonth() + 1) + '/' + date.getDate())
+        // 模擬數據，實際應該從訂單中計算
+        data.push(Math.random() * 10000 + 5000)
+      }
+      
+      salesChartData.value = {
+        labels,
+        datasets: [{
+          label: '銷售額',
+          data,
+          borderColor: '#00d4ff',
+          backgroundColor: 'rgba(0, 212, 255, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      }
+    }
+    
+  } catch (error) {
+    console.error('載入儀表板數據失敗:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 // 生命週期
 onMounted(() => {
-  // 這裡可以加載真實數據
-  console.log('Dashboard mounted')
+  loadDashboardData()
 })
 </script>
 

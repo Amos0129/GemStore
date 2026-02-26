@@ -23,6 +23,12 @@ export default defineConfig({
   server: {
     port: 3001,
     open: true,
+    hmr: {
+      overlay: false
+    },
+    watch: {
+      usePolling: true
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

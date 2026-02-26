@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { adminApi } from '@/api'
+import { apiRequest } from '@/utils/api'
 
 export const useUserStore = defineStore('user', () => {
   // 狀態
@@ -11,7 +11,7 @@ export const useUserStore = defineStore('user', () => {
 
   // 計算屬性
   const isLoggedIn = computed(() => !!token.value && !!user.value)
-  const userInfo = computed(() => user.value || {})
+  const userInfo = computed(() => user.value || { name: 'Admin', email: '' })
 
   // 登入
   const login = async (credentials) => {
@@ -19,27 +19,36 @@ export const useUserStore = defineStore('user', () => {
       isLoading.value = true
       error.value = null
       
-      // 模擬登入 - 在實際應用中這裡會調用真實的 API
-      if (credentials.username === 'admin' && credentials.password === 'admin123') {
-        const mockUser = {
-          id: 1,
-          username: 'admin',
-          name: '系統管理員',
-          email: 'admin@crystal-jewelry.com',
-          role: 'admin',
-          avatar: null,
-          permissions: ['all']
+      const response = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: credentials.email || credentials.username + '@crystal-jewelry.com', // 支援直接傳 email
+          password: credentials.password
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success && data.data) {
+        const userData = data.data.user
+        const accessToken = data.data.accessToken
+        
+        user.value = {
+          id: userData.id,
+          username: userData.email.split('@')[0],
+          name: `${userData.firstName} ${userData.lastName}`,
+          email: userData.email,
+          role: userData.role.toLowerCase(),
+          avatar: userData.avatar,
+          permissions: userData.role === 'ADMIN' ? ['all'] : []
         }
         
-        const mockToken = 'mock-admin-token-' + Date.now()
-        
-        user.value = mockUser
-        token.value = mockToken
-        localStorage.setItem('admin_token', mockToken)
+        token.value = accessToken
+        localStorage.setItem('admin_token', accessToken)
         
         return { success: true }
       } else {
-        throw new Error('帳號或密碼錯誤')
+        throw new Error(data.message || '帳號或密碼錯誤')
       }
     } catch (err) {
       error.value = err.message || '登入失敗'
@@ -56,16 +65,20 @@ export const useUserStore = defineStore('user', () => {
     try {
       isLoading.value = true
       
-      // 模擬檢查認證 - 在實際應用中這裡會調用真實的 API
-      if (token.value.startsWith('mock-admin-token')) {
+      const response = await apiRequest('/auth/me')
+      
+      const data = await response.json()
+      
+      if (data.success && data.data) {
+        const userData = data.data
         user.value = {
-          id: 1,
-          username: 'admin',
-          name: '系統管理員',
-          email: 'admin@crystal-jewelry.com',
-          role: 'admin',
-          avatar: null,
-          permissions: ['all']
+          id: userData.id,
+          username: userData.email.split('@')[0],
+          name: `${userData.firstName} ${userData.lastName}`,
+          email: userData.email,
+          role: userData.role.toLowerCase(),
+          avatar: userData.avatar,
+          permissions: userData.role === 'ADMIN' ? ['all'] : []
         }
         return true
       } else {
@@ -99,10 +112,20 @@ export const useUserStore = defineStore('user', () => {
       isLoading.value = true
       error.value = null
       
-      // 模擬更新 - 在實際應用中這裡會調用真實的 API
-      user.value = { ...user.value, ...profileData }
+      const response = await apiRequest('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(profileData)
+      })
       
-      return { success: true }
+      const data = await response.json()
+      
+      if (data.success) {
+        // 重新獲取用戶資訊
+        await checkAuth()
+        return { success: true }
+      } else {
+        throw new Error(data.message || '更新失敗')
+      }
     } catch (err) {
       error.value = err.message || '更新失敗'
       return { success: false, error: error.value }
@@ -117,10 +140,18 @@ export const useUserStore = defineStore('user', () => {
       isLoading.value = true
       error.value = null
       
-      // 模擬修改密碼 - 在實際應用中這裡會調用真實的 API
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await apiRequest('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(passwordData)
+      })
       
-      return { success: true }
+      const data = await response.json()
+      
+      if (data.success) {
+        return { success: true }
+      } else {
+        throw new Error(data.message || '密碼修改失敗')
+      }
     } catch (err) {
       error.value = err.message || '密碼修改失敗'
       return { success: false, error: error.value }

@@ -18,6 +18,7 @@ import wishlistRoutes from './routes/wishlist.js'
 import addressRoutes from './routes/addresses.js'
 import reviewRoutes from './routes/reviews.js'
 import uploadRoutes from './routes/upload.js'
+import adminDashboardRoutes from './routes/admin-dashboard.js'
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler.js'
@@ -66,8 +67,8 @@ app.use('/api/auth/register', authLimiter)
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
-      process.env.FRONTEND_URL || 'http://localhost:3000',
-      process.env.ADMIN_URL || 'http://localhost:3001'
+      process.env.FRONTEND_URL || 'http://localhost:3001',
+      process.env.ADMIN_URL || 'http://localhost:3002'
     ]
     
     if (!origin || allowedOrigins.includes(origin)) {
@@ -114,6 +115,7 @@ app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/addresses', addressRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/admin/dashboard', adminDashboardRoutes)
 
 // Error handling middleware
 app.use(notFoundHandler)

@@ -2,10 +2,37 @@
   <div class="products-view">
     <div class="view-header">
       <h1>商品管理</h1>
-      <el-button type="primary" @click="showAddDialog = true">
-        <el-icon><Plus /></el-icon>
-        新增商品
-      </el-button>
+      <div class="header-actions">
+        <!-- 批量操作按鈕 -->
+        <div class="batch-actions" v-if="selectedProducts.length > 0">
+          <span class="selected-count">已選擇 {{ selectedProducts.length }} 個商品</span>
+          <el-button 
+            size="small" 
+            type="success" 
+            @click="batchToggleStatus('active')"
+          >
+            批量上架
+          </el-button>
+          <el-button 
+            size="small" 
+            type="warning" 
+            @click="batchToggleStatus('inactive')"
+          >
+            批量下架
+          </el-button>
+          <el-button 
+            size="small" 
+            type="danger" 
+            @click="batchDelete"
+          >
+            批量刪除
+          </el-button>
+        </div>
+        <el-button type="primary" @click="showAddDialog = true">
+          <el-icon><Plus /></el-icon>
+          新增商品
+        </el-button>
+      </div>
     </div>
 
     <!-- 搜尋和篩選 -->
@@ -45,70 +72,81 @@
     <!-- 商品列表 -->
     <div class="products-table">
       <el-table 
+        ref="productTable"
         :data="filteredProducts" 
         style="width: 100%"
         v-loading="loading"
+        @selection-change="handleSelectionChange"
       >
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="id" label="商品編號" width="120" />
-        <el-table-column label="商品圖片" width="100">
+        <el-table-column type="selection" width="50" />
+        <el-table-column prop="id" label="編號" width="80">
+          <template #default="scope">
+            <span class="product-id">{{ scope.row.id.slice(-4) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="圖片" width="70">
           <template #default="scope">
             <el-image
               :src="scope.row.image"
               :alt="scope.row.name"
-              style="width: 60px; height: 60px"
+              style="width: 40px; height: 40px; border-radius: 4px;"
               fit="cover"
             />
           </template>
         </el-table-column>
-        <el-table-column prop="name" label="商品名稱" min-width="200" />
-        <el-table-column prop="category" label="分類" width="120">
+        <el-table-column prop="name" label="商品名稱" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="category" label="分類" width="80">
           <template #default="scope">
-            <el-tag>{{ getCategoryName(scope.row.category) }}</el-tag>
+            <el-tag size="small">{{ getCategoryName(scope.row.category) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="價格" width="120">
+        <el-table-column prop="price" label="價格" width="90">
           <template #default="scope">
-            ${{ scope.row.price.toLocaleString() }}
+            <span class="price-text">${{ scope.row.price.toLocaleString() }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="stock" label="庫存" width="100">
+        <el-table-column prop="stock" label="庫存" width="70">
           <template #default="scope">
             <span :class="{ 'low-stock': scope.row.stock < 10 }">
               {{ scope.row.stock }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="狀態" width="100">
+        <el-table-column prop="status" label="狀態" width="80">
           <template #default="scope">
-            <el-tag :type="scope.row.status === 'active' ? 'success' : 'danger'">
-              {{ scope.row.status === 'active' ? '上架中' : '已下架' }}
+            <el-tag 
+              size="small" 
+              :type="scope.row.status === 'active' ? 'success' : 'danger'"
+            >
+              {{ scope.row.status === 'active' ? '上架' : '下架' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="180">
           <template #default="scope">
-            <el-button 
-              size="small" 
-              type="primary" 
-              @click="editProduct(scope.row)"
-            >
-              編輯
-            </el-button>
-            <el-button 
-              size="small" 
-              :type="scope.row.status === 'active' ? 'warning' : 'success'"
-              @click="toggleStatus(scope.row)"
-            >
-              {{ scope.row.status === 'active' ? '下架' : '上架' }}
-            </el-button>
-            <el-button 
-              size="small" 
-              type="danger" 
-              @click="deleteProduct(scope.row)"
-            >
-              刪除
-            </el-button>
+            <div class="action-buttons">
+              <el-button 
+                size="small" 
+                type="primary" 
+                @click="editProduct(scope.row)"
+              >
+                編輯
+              </el-button>
+              <el-button 
+                size="small" 
+                :type="scope.row.status === 'active' ? 'warning' : 'success'"
+                @click="toggleStatus(scope.row)"
+              >
+                {{ scope.row.status === 'active' ? '下架' : '上架' }}
+              </el-button>
+              <el-button 
+                size="small" 
+                type="danger" 
+                @click="deleteProduct(scope.row)"
+              >
+                刪除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -140,6 +178,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import ProductForm from '@/components/ProductForm.vue'
+import adminApi from '@/api/index.js'
 
 // 響應式數據
 const loading = ref(false)
@@ -149,37 +188,11 @@ const statusFilter = ref('')
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const currentProduct = ref(null)
+const selectedProducts = ref([])
+const productTable = ref(null)
 
-// 模擬商品數據
-const products = ref([
-  {
-    id: 'P001',
-    name: '紫水晶能量項鍊',
-    category: 'necklace',
-    price: 2800,
-    stock: 15,
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200'
-  },
-  {
-    id: 'P002',
-    name: '粉晶愛情手鍊',
-    category: 'bracelet',
-    price: 1680,
-    stock: 8,
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1584302179602-e4578db5a8c2?w=200'
-  },
-  {
-    id: 'P003',
-    name: '白水晶淨化戒指',
-    category: 'ring',
-    price: 3200,
-    stock: 12,
-    status: 'inactive',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200'
-  }
-])
+// 商品數據
+const products = ref([])
 
 // 計算屬性
 const filteredProducts = computed(() => {
@@ -221,6 +234,76 @@ const handleSearch = () => {
 const editProduct = (product) => {
   currentProduct.value = { ...product }
   showEditDialog.value = true
+}
+
+// 處理多選變化
+const handleSelectionChange = (selection) => {
+  selectedProducts.value = selection
+}
+
+// 批量狀態切換
+const batchToggleStatus = async (newStatus) => {
+  if (selectedProducts.value.length === 0) return
+  
+  try {
+    const action = newStatus === 'active' ? '上架' : '下架'
+    await ElMessageBox.confirm(
+      `確定要${action}選中的 ${selectedProducts.value.length} 個商品嗎？`,
+      `批量${action}`,
+      {
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    const count = selectedProducts.value.length
+    selectedProducts.value.forEach(product => {
+      product.status = newStatus
+    })
+    
+    // 清除選擇並清空表格勾選狀態
+    selectedProducts.value = []
+    // 通過 ref 清除表格選擇狀態
+    if (productTable.value) {
+      productTable.value.clearSelection()
+    }
+    
+    ElMessage.success(`已批量${action} ${count} 個商品`)
+  } catch {
+    // 用戶取消操作
+  }
+}
+
+// 批量刪除
+const batchDelete = async () => {
+  if (selectedProducts.value.length === 0) return
+  
+  try {
+    await ElMessageBox.confirm(
+      `確定要刪除選中的 ${selectedProducts.value.length} 個商品嗎？此操作不可恢復。`,
+      '批量刪除',
+      {
+        confirmButtonText: '確定刪除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    const selectedIds = selectedProducts.value.map(p => p.id)
+    products.value = products.value.filter(p => !selectedIds.includes(p.id))
+    
+    // 清除選擇並清空表格勾選狀態
+    selectedProducts.value = []
+    // 通過 ref 清除表格選擇狀態
+    if (productTable.value) {
+      productTable.value.clearSelection()
+    }
+    
+    ElMessage.success(`已批量刪除 ${selectedIds.length} 個商品`)
+  } catch {
+    // 用戶取消操作
+  }
 }
 
 const toggleStatus = async (product) => {
@@ -290,8 +373,35 @@ const handleUpdate = (productData) => {
   }
 }
 
+// 載入商品數據
+const loadProducts = async () => {
+  try {
+    loading.value = true
+    // 使用普通的 API 而不是 admin API
+    const response = await fetch('http://localhost:5000/api/products')
+    const data = await response.json()
+    
+    if (data.success) {
+      products.value = data.data.map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category?.slug || 'unknown',
+        price: parseFloat(product.price),
+        stock: product.stock,
+        status: product.isActive ? 'active' : 'inactive',
+        image: product.images?.[0]?.url || ''
+      }))
+    }
+  } catch (error) {
+    console.error('載入商品失敗:', error)
+    ElMessage.error('載入商品數據失敗')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  // 載入商品數據
+  loadProducts()
 })
 </script>
 
@@ -305,6 +415,29 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-hover);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.selected-count {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 14px;
+  margin-right: 8px;
 }
 
 .view-header h1 {
@@ -330,5 +463,28 @@ onMounted(() => {
 .low-stock {
   color: var(--el-color-danger);
   font-weight: bold;
+}
+
+.product-id {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--el-text-color-primary);
+  font-weight: 500;
+}
+
+.price-text {
+  font-weight: 600;
+  color: var(--el-color-success);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-buttons .el-button {
+  margin: 0 !important;
 }
 </style>

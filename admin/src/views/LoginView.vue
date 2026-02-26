@@ -24,10 +24,10 @@
         class="login-form"
         @submit.prevent="handleLogin"
       >
-        <el-form-item prop="username">
+        <el-form-item prop="email">
           <el-input
-            v-model="loginForm.username"
-            placeholder="請輸入管理員帳號"
+            v-model="loginForm.email"
+            placeholder="請輸入管理員信箱"
             size="large"
             :prefix-icon="User"
             @keyup.enter="handleLogin"
@@ -73,7 +73,7 @@
           show-icon
         >
           <template #default>
-            <p>帳號：admin</p>
+            <p>信箱：admin@crystal-jewelry.com</p>
             <p>密碼：admin123</p>
           </template>
         </el-alert>
@@ -108,14 +108,14 @@ const loginFormRef = ref()
 const rememberMe = ref(false)
 
 const loginForm = reactive({
-  username: 'admin',
+  email: 'admin@crystal-jewelry.com',
   password: 'admin123'
 })
 
 const rules = {
-  username: [
-    { required: true, message: '請輸入管理員帳號', trigger: 'blur' },
-    { min: 3, max: 20, message: '帳號長度應為 3-20 個字符', trigger: 'blur' }
+  email: [
+    { required: true, message: '請輸入管理員信箱', trigger: 'blur' },
+    { type: 'email', message: '請輸入有效的信箱格式', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '請輸入密碼', trigger: 'blur' },
@@ -165,65 +165,21 @@ const openKuseLink = () => {
 .login-background {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, #f8fafc 100%);
 }
 
 .bg-shapes {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.shape {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green));
-  opacity: 0.1;
-  animation: float 6s ease-in-out infinite;
-}
-
-.shape-1 {
-  width: 200px;
-  height: 200px;
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  width: 150px;
-  height: 150px;
-  top: 60%;
-  right: 15%;
-  animation-delay: 2s;
-}
-
-.shape-3 {
-  width: 100px;
-  height: 100px;
-  bottom: 20%;
-  left: 60%;
-  animation-delay: 4s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+  display: none;
 }
 
 .login-card {
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 48px;
+  border-radius: 8px;
+  padding: 40px;
   width: 100%;
-  max-width: 440px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
   position: relative;
   z-index: 1;
 }
@@ -234,25 +190,22 @@ const openKuseLink = () => {
 }
 
 .logo {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green));
-  border-radius: 20px;
+  width: 64px;
+  height: 64px;
+  background: var(--primary);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  margin: 0 auto 24px;
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
-  animation: glow 2s ease-in-out infinite alternate;
+  font-size: 28px;
+  color: white;
+  margin: 0 auto 20px;
 }
 
 .title {
   font-size: 32px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
   margin-bottom: 8px;
 }
 
@@ -279,15 +232,14 @@ const openKuseLink = () => {
   height: 48px;
   font-size: 16px;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green)) !important;
-  border: none !important;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3) !important;
-  transition: all 0.3s ease !important;
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  color: white !important;
 }
 
 .login-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.5) !important;
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
 }
 
 .login-tips {
@@ -310,17 +262,13 @@ const openKuseLink = () => {
 }
 
 .kuse-branding:hover {
-  color: var(--neon-blue);
+  color: var(--primary);
 }
 
 .kuse-branding svg {
   height: 1em;
 }
 
-@keyframes glow {
-  0% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
-  100% { box-shadow: 0 0 40px rgba(0, 255, 170, 0.8); }
-}
 
 /* 響應式設計 */
 @media (max-width: 480px) {

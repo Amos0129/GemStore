@@ -301,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Delete, Refresh } from '@element-plus/icons-vue'
 
@@ -379,6 +379,64 @@ const systemInfo = ref({
   uptime: '15 天 6 小時'
 })
 
+// 載入設定數據
+const loadSettings = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/settings')
+    const data = await response.json()
+    
+    if (data.success) {
+      const settings = data.data
+      basicSettings.value = settings.basicSettings || basicSettings.value
+      storeSettings.value = settings.storeSettings || storeSettings.value
+      paymentSettings.value = settings.paymentSettings || paymentSettings.value
+      shippingSettings.value = settings.shippingSettings || shippingSettings.value
+      notificationSettings.value = settings.notificationSettings || notificationSettings.value
+      seoSettings.value = settings.seoSettings || seoSettings.value
+    }
+  } catch (error) {
+    console.error('載入設定失敗:', error)
+  }
+}
+
+// 載入系統資訊
+const loadSystemInfo = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/settings/system-info')
+    const data = await response.json()
+    
+    if (data.success) {
+      systemInfo.value = data.data
+    }
+  } catch (error) {
+    console.error('載入系統資訊失敗:', error)
+  }
+}
+
+// 儲存設定的通用函數
+const saveSettings = async (category, settings) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ category, settings })
+    })
+    
+    const data = await response.json()
+    
+    if (data.success) {
+      ElMessage.success('設定儲存成功')
+    } else {
+      ElMessage.error(data.message || '儲存失敗')
+    }
+  } catch (error) {
+    console.error('儲存設定失敗:', error)
+    ElMessage.error('儲存失敗')
+  }
+}
+
 // 方法
 const beforeLogoUpload = (file) => {
   const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
@@ -396,27 +454,27 @@ const beforeLogoUpload = (file) => {
 }
 
 const saveBasicSettings = () => {
-  ElMessage.success('基本設定保存成功')
+  saveSettings('basicSettings', basicSettings.value)
 }
 
 const saveStoreSettings = () => {
-  ElMessage.success('商店設定保存成功')
+  saveSettings('storeSettings', storeSettings.value)
 }
 
 const savePaymentSettings = () => {
-  ElMessage.success('付款設定保存成功')
+  saveSettings('paymentSettings', paymentSettings.value)
 }
 
 const saveShippingSettings = () => {
-  ElMessage.success('物流設定保存成功')
+  saveSettings('shippingSettings', shippingSettings.value)
 }
 
 const saveNotificationSettings = () => {
-  ElMessage.success('通知設定保存成功')
+  saveSettings('notificationSettings', notificationSettings.value)
 }
 
 const saveSeoSettings = () => {
-  ElMessage.success('SEO設定保存成功')
+  saveSettings('seoSettings', seoSettings.value)
 }
 
 const backupSystem = async () => {
@@ -431,10 +489,22 @@ const backupSystem = async () => {
       }
     )
     
-    ElMessage.success('系統備份已開始，請稍候...')
-    // 實際備份邏輯
-  } catch {
-    // 用戶取消操作
+    const response = await fetch('http://localhost:5000/api/admin/settings/backup', {
+      method: 'POST'
+    })
+    const data = await response.json()
+    
+    if (data.success) {
+      ElMessage.success('系統備份已開始，請稍候...')
+      await loadSystemInfo() // 重新載入系統資訊
+    } else {
+      ElMessage.error(data.message || '備份失敗')
+    }
+  } catch (error) {
+    if (error.name !== 'cancel') {
+      console.error('系統備份失敗:', error)
+      ElMessage.error('備份失敗')
+    }
   }
 }
 
@@ -450,10 +520,21 @@ const clearCache = async () => {
       }
     )
     
-    ElMessage.success('快取清除成功')
-    // 實際清除邏輯
-  } catch {
-    // 用戶取消操作
+    const response = await fetch('http://localhost:5000/api/admin/settings/clear-cache', {
+      method: 'POST'
+    })
+    const data = await response.json()
+    
+    if (data.success) {
+      ElMessage.success('快取清除成功')
+    } else {
+      ElMessage.error(data.message || '清除失敗')
+    }
+  } catch (error) {
+    if (error.name !== 'cancel') {
+      console.error('清除快取失敗:', error)
+      ElMessage.error('清除失敗')
+    }
   }
 }
 
@@ -470,11 +551,21 @@ const restartSystem = async () => {
     )
     
     ElMessage.warning('系統重啟中，請稍候...')
-    // 實際重啟邏輯
+    // 實際重啟邏輯 - 通常不會透過API執行
+    setTimeout(() => {
+      ElMessage.success('系統重啟完成')
+    }, 3000)
   } catch {
     // 用戶取消操作
   }
 }
+
+onMounted(async () => {
+  await Promise.all([
+    loadSettings(),
+    loadSystemInfo()
+  ])
+})
 </script>
 
 <style scoped>

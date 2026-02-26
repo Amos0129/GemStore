@@ -51,6 +51,18 @@ const routes = [
     meta: { requiresAuth: true, title: '系統設定' }
   },
   {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/ProfileView.vue'),
+    meta: { requiresAuth: true, title: '個人資料' }
+  },
+  {
+    path: '/account-settings',
+    name: 'AccountSettings',
+    component: () => import('@/views/AccountSettingsView.vue'),
+    meta: { requiresAuth: true, title: '帳號設定' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue')
@@ -78,7 +90,14 @@ router.beforeEach(async (to, from, next) => {
   
   // 檢查認證狀態
   if (to.meta.requiresAuth) {
-    if (!userStore.isLoggedIn) {
+    // 如果有 token 但沒有用戶資料，嘗試檢查認證
+    if (userStore.token && !userStore.user) {
+      const authValid = await userStore.checkAuth()
+      if (!authValid) {
+        next({ name: 'Login', query: { redirect: to.fullPath } })
+        return
+      }
+    } else if (!userStore.isLoggedIn) {
       next({ name: 'Login', query: { redirect: to.fullPath } })
       return
     }

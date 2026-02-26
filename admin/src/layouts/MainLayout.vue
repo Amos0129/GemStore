@@ -28,8 +28,8 @@
         :collapse="sidebarCollapsed"
         router
         background-color="transparent"
-        text-color="#b0b0b0"
-        active-text-color="#00d4ff"
+        text-color="var(--text-primary)"
+        active-text-color="var(--primary)"
       >
         <el-menu-item index="/" class="menu-item">
           <el-icon><TrendCharts /></el-icon>
@@ -97,26 +97,66 @@
         
         <div class="topbar-right">
           <!-- 通知 -->
-          <el-badge :value="5" class="notification-badge">
-            <el-button 
-              class="icon-btn"
-              :icon="Bell"
-              @click="showNotifications"
-            />
-          </el-badge>
+          <el-popover
+            v-model:visible="showNotificationPanel"
+            placement="bottom"
+            :width="360"
+            trigger="click"
+            popper-class="notification-popover"
+          >
+            <template #reference>
+              <div class="notification-btn" @click="loadNotifications">
+                <el-icon class="notification-icon">
+                  <Bell />
+                </el-icon>
+                <span v-if="unreadCount > 0" class="notification-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+              </div>
+            </template>
+            
+            <div class="notification-panel">
+              <div class="notification-header">
+                <h4>通知</h4>
+                <div class="notification-actions">
+                  <el-button size="small" text @click="markAllAsRead" v-if="unreadCount > 0">
+                    全部已讀
+                  </el-button>
+                </div>
+              </div>
+              
+              <div class="notification-list" v-if="notifications.length > 0">
+                <div 
+                  v-for="notification in notifications" 
+                  :key="notification.id"
+                  class="notification-item"
+                  :class="{ 'unread': !notification.isRead }"
+                  @click="handleNotificationClick(notification)"
+                >
+                  <div class="notification-content">
+                    <div class="notification-title">{{ notification.title }}</div>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-time">{{ formatNotificationTime(notification.createdAt) }}</div>
+                  </div>
+                  <div class="notification-indicator" v-if="!notification.isRead"></div>
+                </div>
+              </div>
+              
+              <div class="notification-empty" v-else>
+                <el-empty description="暫無通知" :image-size="60" />
+              </div>
+            </div>
+          </el-popover>
           
           <!-- 用戶菜單 -->
           <el-dropdown @command="handleUserMenuCommand" class="user-dropdown">
             <div class="user-profile">
               <el-avatar 
-                :size="36"
+                :size="32"
                 class="user-avatar"
                 :src="userStore.userInfo.avatar"
               >
                 {{ userStore.userInfo.name?.[0] || 'A' }}
               </el-avatar>
-              <span v-if="!isMobile" class="user-name">{{ userStore.userInfo.name }}</span>
-              <el-icon v-if="!isMobile"><ArrowDown /></el-icon>
+              <el-icon class="dropdown-arrow"><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
@@ -159,6 +199,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useNotificationStore } from '@/store/notification'
+import { apiRequest } from '@/utils/api'
 import {
   Menu, Close, Expand, Fold, House, Bell, User, ArrowDown,
   Setting, SwitchButton, TrendCharts, Box, ShoppingCart,
@@ -174,6 +215,9 @@ const notificationStore = useNotificationStore()
 const sidebarCollapsed = ref(false)
 const mobileSidebarVisible = ref(false)
 const isMobile = ref(false)
+const notifications = ref([])
+const unreadCount = ref(0)
+const showNotificationPanel = ref(false)
 
 // 計算屬性
 const currentRoute = computed(() => route.path)
@@ -196,19 +240,95 @@ const toggleMobileSidebar = () => {
   mobileSidebarVisible.value = !mobileSidebarVisible.value
 }
 
-// 顯示通知
-const showNotifications = () => {
-  notificationStore.info('暫無新通知')
+// 載入通知
+const loadNotifications = async () => {
+  try {
+    const response = await apiRequest('/admin/notifications?limit=10')
+    const data = await response.json()
+    
+    if (data.success) {
+      notifications.value = data.data.notifications
+      unreadCount.value = data.data.unreadCount
+    }
+  } catch (error) {
+    console.error('載入通知失敗:', error)
+  }
+}
+
+// 標記所有通知為已讀
+const markAllAsRead = async () => {
+  try {
+    const response = await apiRequest('/admin/notifications/read-all', {
+      method: 'PUT'
+    })
+    
+    if (response.ok) {
+      unreadCount.value = 0
+      notifications.value.forEach(n => {
+        n.isRead = true
+        n.readAt = new Date()
+      })
+      notificationStore.success('所有通知已標記為已讀')
+    }
+  } catch (error) {
+    console.error('標記通知失敗:', error)
+  }
+}
+
+// 處理通知點擊
+const handleNotificationClick = async (notification) => {
+  if (!notification.isRead) {
+    try {
+      await apiRequest(`/admin/notifications/${notification.id}/read`, {
+        method: 'PUT'
+      })
+      
+      notification.isRead = true
+      notification.readAt = new Date()
+      unreadCount.value = Math.max(0, unreadCount.value - 1)
+    } catch (error) {
+      console.error('標記通知已讀失敗:', error)
+    }
+  }
+  
+  // 根據通知類型導航到相應頁面
+  if (notification.data?.orderId) {
+    router.push('/orders')
+  } else if (notification.data?.productId) {
+    router.push('/products')
+  } else if (notification.data?.userId) {
+    router.push('/members')
+  }
+  
+  showNotificationPanel.value = false
+}
+
+// 格式化通知時間
+const formatNotificationTime = (timestamp) => {
+  const now = new Date()
+  const time = new Date(timestamp)
+  const diff = now - time
+  
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  
+  if (minutes < 1) return '剛剛'
+  if (minutes < 60) return `${minutes}分鐘前`
+  if (hours < 24) return `${hours}小時前`
+  if (days < 7) return `${days}天前`
+  
+  return time.toLocaleDateString('zh-TW')
 }
 
 // 處理用戶菜單命令
 const handleUserMenuCommand = async (command) => {
   switch (command) {
     case 'profile':
-      notificationStore.info('個人資料功能開發中...')
+      router.push('/profile')
       break
     case 'settings':
-      router.push('/settings')
+      router.push('/account-settings')
       break
     case 'logout':
       await userStore.logout()
@@ -221,7 +341,11 @@ const handleUserMenuCommand = async (command) => {
 // 生命週期
 onMounted(() => {
   checkMobile()
+  loadNotifications()
   window.addEventListener('resize', checkMobile)
+  
+  // 定期刷新通知
+  setInterval(loadNotifications, 30000) // 每30秒刷新一次
 })
 
 onUnmounted(() => {
@@ -245,6 +369,10 @@ onUnmounted(() => {
 .sidebar-header {
   padding: 24px 20px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  min-height: 88px;
+  box-sizing: border-box;
 }
 
 .logo-section {
@@ -255,27 +383,37 @@ onUnmounted(() => {
 
 .logo-section.collapsed {
   justify-content: center;
+  width: 100%;
 }
 
 .sidebar-logo {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green));
+  min-width: 40px;
+  min-height: 40px;
+  background: var(--primary);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   color: white;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.sidebar-logo i {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-title {
   font-size: 20px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary);
 }
 
 .sidebar-menu {
@@ -285,6 +423,7 @@ onUnmounted(() => {
 
 .main-container {
   min-height: 100vh;
+  background: var(--bg-primary);
 }
 
 .topbar {
@@ -305,14 +444,31 @@ onUnmounted(() => {
 }
 
 .hamburger-btn {
-  background: rgba(0, 212, 255, 0.1) !important;
+  background: var(--bg-hover) !important;
   border: 1px solid var(--border) !important;
   color: var(--text-primary) !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
 }
 
 .hamburger-btn:hover {
-  background: rgba(0, 212, 255, 0.2) !important;
-  border-color: var(--neon-blue) !important;
+  background: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+}
+
+.hamburger-btn .el-icon {
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .breadcrumb {
@@ -325,20 +481,50 @@ onUnmounted(() => {
   gap: 16px;
 }
 
-.notification-badge {
-  margin-right: 8px;
+/* 通知按鈕樣式 */
+.notification-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 12px;
 }
 
-.icon-btn {
-  background: rgba(0, 212, 255, 0.1) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text-primary) !important;
-  border-radius: 8px !important;
+.notification-btn:hover {
+  background: var(--primary-light);
 }
 
-.icon-btn:hover {
-  background: rgba(0, 212, 255, 0.2) !important;
-  border-color: var(--neon-blue) !important;
+.notification-icon {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.notification-btn:hover .notification-icon {
+  color: var(--primary);
+}
+
+.notification-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff4d4f;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 0 0 2px white;
 }
 
 .user-dropdown {
@@ -348,29 +534,30 @@ onUnmounted(() => {
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: 8px;
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid var(--border);
-  transition: all 0.3s ease;
+  background: var(--bg-hover);
+  transition: background-color 0.2s ease;
 }
 
 .user-profile:hover {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: var(--neon-blue);
+  background: var(--primary-light);
 }
 
 .user-avatar {
-  background: linear-gradient(135deg, var(--neon-blue), var(--neon-green)) !important;
+  background: var(--primary) !important;
   color: white !important;
   font-weight: 600;
 }
 
-.user-name {
-  color: var(--text-primary);
-  font-weight: 500;
+.dropdown-arrow {
   font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.user-profile:hover .dropdown-arrow {
+  color: var(--primary);
 }
 
 .main-content {
@@ -428,5 +615,94 @@ onUnmounted(() => {
   .main-content {
     padding: 16px;
   }
+}
+
+/* 通知面板樣式 */
+:deep(.notification-popover) {
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notification-panel {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.notification-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.notification-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  position: relative;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+  background: var(--bg-hover);
+}
+
+.notification-item.unread {
+  background: var(--primary-light);
+  border-left: 3px solid var(--primary);
+}
+
+.notification-content {
+  position: relative;
+}
+
+.notification-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.notification-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.notification-indicator {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translateY(-50%);
+}
+
+.notification-empty {
+  padding: 40px 20px;
+  text-align: center;
 }
 </style>

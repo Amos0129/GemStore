@@ -97,57 +97,73 @@
           v-loading="loading"
           row-key="id"
           :tree-props="{ children: 'children' }"
+          table-layout="fixed"
         >
-          <el-table-column prop="name" label="分類名稱" min-width="200">
+          <el-table-column prop="name" label="分類名稱" min-width="160" show-overflow-tooltip>
             <template #default="scope">
               <el-icon style="margin-right: 8px;">
                 <component :is="scope.row.icon" />
               </el-icon>
-              {{ scope.row.name }}
+              <span class="category-name">{{ scope.row.name }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="code" label="分類代碼" width="150" />
-          <el-table-column prop="description" label="描述" min-width="200" />
-          <el-table-column prop="productCount" label="商品數量" width="120">
+          <el-table-column prop="code" label="分類代碼" min-width="120" show-overflow-tooltip>
             <template #default="scope">
-              <el-tag type="info">{{ scope.row.productCount || 0 }}</el-tag>
+              <span class="category-code">{{ scope.row.code }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="sort" label="排序" width="100" />
-          <el-table-column prop="status" label="狀態" width="100">
+          <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip>
+            <template #default="scope">
+              <span class="description-text">{{ scope.row.description || '-' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="productCount" label="商品數量" width="100" align="center">
+            <template #default="scope">
+              <el-tag size="small" type="info">{{ scope.row.productCount || 0 }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sort" label="排序" width="70" align="center">
+            <template #default="scope">
+              <span class="sort-number">{{ scope.row.sort || 0 }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="狀態" width="70" align="center">
             <template #default="scope">
               <el-switch
                 v-model="scope.row.status"
                 :active-value="1"
                 :inactive-value="0"
                 @change="toggleStatus(scope.row)"
+                size="small"
               />
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="250" fixed="right">
+          <el-table-column label="操作" min-width="260">
             <template #default="scope">
-              <el-button 
-                size="small" 
-                type="primary" 
-                @click="editCategory(scope.row)"
-              >
-                編輯
-              </el-button>
-              <el-button 
-                size="small" 
-                type="success" 
-                @click="addSubCategory(scope.row)"
-              >
-                新增子分類
-              </el-button>
-              <el-button 
-                size="small" 
-                type="danger" 
-                @click="deleteCategory(scope.row)"
-                :disabled="scope.row.productCount > 0"
-              >
-                刪除
-              </el-button>
+              <div class="action-buttons">
+                <el-button 
+                  size="small" 
+                  type="primary" 
+                  @click="editCategory(scope.row)"
+                >
+                  編輯
+                </el-button>
+                <el-button 
+                  size="small" 
+                  type="success" 
+                  @click="addSubCategory(scope.row)"
+                >
+                  新增子分類
+                </el-button>
+                <el-button 
+                  size="small" 
+                  type="danger" 
+                  @click="deleteCategory(scope.row)"
+                  :disabled="scope.row.productCount > 0"
+                >
+                  刪除
+                </el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -280,68 +296,8 @@ const formRules = {
   ]
 }
 
-// 模擬分類數據
-const categories = ref([
-  {
-    id: 1,
-    name: '項鍊',
-    code: 'necklace',
-    parentId: null,
-    icon: 'Heart',
-    description: '各種款式的項鍊飾品',
-    sort: 1,
-    status: 1,
-    productCount: 25,
-    children: [
-      {
-        id: 11,
-        name: '短項鍊',
-        code: 'short-necklace',
-        parentId: 1,
-        icon: 'Heart',
-        description: '16-18英寸的短項鍊',
-        sort: 1,
-        status: 1,
-        productCount: 12
-      },
-      {
-        id: 12,
-        name: '長項鍊',
-        code: 'long-necklace',
-        parentId: 1,
-        icon: 'Heart',
-        description: '20英寸以上的長項鍊',
-        sort: 2,
-        status: 1,
-        productCount: 13
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: '手鍊',
-    code: 'bracelet',
-    parentId: null,
-    icon: 'Star',
-    description: '各種手鍊飾品',
-    sort: 2,
-    status: 1,
-    productCount: 18,
-    children: []
-  },
-  {
-    id: 3,
-    name: '戒指',
-    code: 'ring',
-    parentId: null,
-    icon: 'Star',
-    description: '各種戒指飾品',
-    sort: 3,
-    status: 1,
-    productCount: 15,
-    children: []
-  }
-])
+// 分類數據
+const categories = ref([])
 
 // 計算屬性
 const categoriesTree = computed(() => categories.value)
@@ -462,9 +418,28 @@ const deleteCategory = async (category) => {
   }
 }
 
-const toggleStatus = (category) => {
-  const status = category.status === 1 ? '啟用' : '停用'
-  ElMessage.success(`分類已${status}`)
+const toggleStatus = async (category) => {
+  try {
+    const response = await fetch(`http://localhost:5000/api/admin/categories/${category.id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: category.status })
+    })
+    
+    const data = await response.json()
+    
+    if (data.success) {
+      const status = category.status === 1 ? '啟用' : '停用'
+      ElMessage.success(`分類已${status}`)
+    } else {
+      ElMessage.error(data.message || '操作失敗')
+    }
+  } catch (error) {
+    console.error('切換分類狀態失敗:', error)
+    ElMessage.error('操作失敗')
+  }
 }
 
 const handleDrop = (dragNode, dropNode, dropType) => {
@@ -545,9 +520,29 @@ const handleAdd = () => {
   showCategoryDialog.value = true
 }
 
+// 載入分類數據
+const loadCategories = async () => {
+  try {
+    loading.value = true
+    const response = await fetch('http://localhost:5000/api/admin/categories')
+    const data = await response.json()
+    
+    if (data.success) {
+      categories.value = data.data
+    }
+  } catch (error) {
+    console.error('載入分類失敗:', error)
+    ElMessage.error('載入分類數據失敗')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 監聽showAddDialog變化
 const unwatchAdd = ref()
-onMounted(() => {
+onMounted(async () => {
+  await loadCategories()
+  
   unwatchAdd.value = showAddDialog.value
   if (unwatchAdd.value) {
     handleAdd()
@@ -612,5 +607,40 @@ onMounted(() => {
 
 .tree-node:hover .node-actions {
   display: block;
+}
+
+.category-name {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.category-code {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  background: var(--el-fill-color-light);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--el-color-primary);
+}
+
+.description-text {
+  color: var(--el-text-color-regular);
+  font-size: 13px;
+}
+
+.sort-number {
+  font-weight: 600;
+  color: var(--el-color-warning);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-buttons .el-button {
+  margin: 0 !important;
 }
 </style>

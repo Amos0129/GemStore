@@ -11,7 +11,7 @@
     <!-- 搜尋和篩選 -->
     <div class="search-filters">
       <el-row :gutter="20">
-        <el-col :span="6">
+        <el-col :span="7">
           <el-input
             v-model="searchQuery"
             placeholder="搜尋會員姓名或信箱"
@@ -23,14 +23,14 @@
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-select v-model="statusFilter" placeholder="會員狀態" clearable>
+          <el-select v-model="statusFilter" placeholder="會員狀態" clearable style="width: 100%">
             <el-option label="全部狀態" value="" />
             <el-option label="正常" value="active" />
             <el-option label="停用" value="inactive" />
           </el-select>
         </el-col>
-        <el-col :span="4">
-          <el-select v-model="levelFilter" placeholder="會員等級" clearable>
+        <el-col :span="5">
+          <el-select v-model="levelFilter" placeholder="會員等級" clearable style="width: 100%">
             <el-option label="全部等級" value="" />
             <el-option label="一般會員" value="bronze" />
             <el-option label="銀級會員" value="silver" />
@@ -38,7 +38,7 @@
             <el-option label="白金會員" value="platinum" />
           </el-select>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="8">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
@@ -47,6 +47,7 @@
             end-placeholder="註冊結束日期"
             format="YYYY/MM/DD"
             value-format="YYYY-MM-DD"
+            style="width: 100%"
           />
         </el-col>
       </el-row>
@@ -226,51 +227,14 @@ const currentMember = ref(null)
 
 // 統計數據
 const stats = ref({
-  total: 1286,
-  active: 1156,
-  newThisMonth: 47,
-  avgSpending: 2156
+  total: 0,
+  active: 0,
+  newThisMonth: 0,
+  avgSpending: 0
 })
 
-// 模擬會員數據
-const members = ref([
-  {
-    id: 1,
-    name: '陳美玲',
-    email: 'chen@example.com',
-    phone: '0912-345-678',
-    avatar: null,
-    level: 'gold',
-    totalSpent: 15800,
-    orderCount: 8,
-    status: 'active',
-    createdAt: '2023-08-15T10:30:00Z'
-  },
-  {
-    id: 2,
-    name: '李志明',
-    email: 'lee@example.com',
-    phone: '0987-654-321',
-    avatar: null,
-    level: 'silver',
-    totalSpent: 8500,
-    orderCount: 5,
-    status: 'active',
-    createdAt: '2023-10-22T14:15:00Z'
-  },
-  {
-    id: 3,
-    name: '王小華',
-    email: 'wang@example.com',
-    phone: '0955-123-456',
-    avatar: null,
-    level: 'bronze',
-    totalSpent: 2800,
-    orderCount: 2,
-    status: 'inactive',
-    createdAt: '2024-01-08T16:45:00Z'
-  }
-])
+// 會員數據
+const members = ref([])
 
 // 計算屬性
 const filteredMembers = computed(() => {
@@ -345,10 +309,30 @@ const toggleStatus = async (member) => {
       }
     )
     
-    member.status = newStatus
-    ElMessage.success(`會員已${action}`)
-  } catch {
-    // 用戶取消操作
+    const response = await fetch(`http://localhost:5000/api/admin/members/${member.id}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    })
+    
+    const data = await response.json()
+    
+    if (data.success) {
+      member.status = newStatus
+      ElMessage.success(`會員已${action}`)
+      
+      // 更新統計數據
+      await loadMemberStats()
+    } else {
+      ElMessage.error(data.message || '操作失敗')
+    }
+  } catch (error) {
+    if (error.name !== 'cancel') {
+      console.error('切換會員狀態失敗:', error)
+      ElMessage.error('操作失敗')
+    }
   }
 }
 
@@ -380,9 +364,57 @@ const handleUpdate = (memberData) => {
   }
 }
 
-onMounted(() => {
-  // 載入會員數據
-  total.value = members.value.length
+// 載入會員統計數據
+const loadMemberStats = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/admin/members/stats')
+    const data = await response.json()
+    
+    if (data.success) {
+      stats.value = data.data
+    }
+  } catch (error) {
+    console.error('載入會員統計失敗:', error)
+  }
+}
+
+// 載入會員列表
+const loadMembers = async () => {
+  try {
+    loading.value = true
+    
+    const params = new URLSearchParams({
+      page: currentPage.value,
+      limit: pageSize.value,
+      search: searchQuery.value,
+      status: statusFilter.value,
+      level: levelFilter.value
+    })
+
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.append('startDate', dateRange.value[0])
+      params.append('endDate', dateRange.value[1])
+    }
+
+    const response = await fetch(`http://localhost:5000/api/admin/members?${params}`)
+    const data = await response.json()
+    
+    if (data.success) {
+      members.value = data.data.members
+      total.value = data.data.pagination.total
+    }
+  } catch (error) {
+    console.error('載入會員列表失敗:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([
+    loadMemberStats(),
+    loadMembers()
+  ])
 })
 </script>
 

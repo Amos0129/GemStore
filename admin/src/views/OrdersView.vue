@@ -18,24 +18,31 @@
             v-model="searchQuery"
             placeholder="搜尋訂單編號或客戶"
             clearable
+            @input="handleSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </el-col>
-        <el-col :span="6">
-          <el-select v-model="statusFilter" placeholder="訂單狀態" clearable>
+        <el-col :span="5">
+          <el-select 
+            v-model="statusFilter" 
+            placeholder="訂單狀態" 
+            clearable
+            @change="handleSearch"
+          >
             <el-option label="全部狀態" value="" />
             <el-option label="待付款" value="pending" />
             <el-option label="已付款" value="paid" />
             <el-option label="處理中" value="processing" />
             <el-option label="已出貨" value="shipped" />
-            <el-option label="已完成" value="completed" />
+            <el-option label="已送達" value="delivered" />
             <el-option label="已取消" value="cancelled" />
+            <el-option label="已退款" value="refunded" />
           </el-select>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="8">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
@@ -44,14 +51,18 @@
             end-placeholder="結束日期"
             format="YYYY/MM/DD"
             value-format="YYYY-MM-DD"
+            style="width: 100%"
+            @change="handleSearch"
           />
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
           <el-input-number
             v-model="minAmount"
             placeholder="最小金額"
             :min="0"
             controls-position="right"
+            style="width: 100%"
+            @change="handleSearch"
           />
         </el-col>
       </el-row>
@@ -106,45 +117,65 @@
         style="width: 100%"
         v-loading="loading"
       >
-        <el-table-column type="index" width="50" />
-        <el-table-column prop="orderNumber" label="訂單編號" width="150" />
-        <el-table-column prop="customerName" label="客戶姓名" width="120" />
-        <el-table-column prop="customerEmail" label="客戶信箱" min-width="180" />
-        <el-table-column prop="totalAmount" label="訂單金額" width="120">
+        <el-table-column prop="orderNumber" label="訂單編號" width="170" show-overflow-tooltip>
           <template #default="scope">
-            ${{ scope.row.totalAmount.toLocaleString() }}
+            <span class="order-number">{{ scope.row.orderNumber }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="customerName" label="客戶姓名" width="120" show-overflow-tooltip />
+        <el-table-column prop="customerEmail" label="客戶信箱" width="200" show-overflow-tooltip />
+        <el-table-column prop="totalAmount" label="訂單金額" width="130">
+          <template #default="scope">
+            <span class="amount-text">${{ scope.row.totalAmount.toLocaleString() }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="狀態" width="100">
           <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
+            <el-tag size="small" :type="getStatusType(scope.row.status)">
               {{ getStatusText(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="下單時間" width="160">
           <template #default="scope">
-            {{ formatDate(scope.row.createdAt) }}
+            <span class="date-text">{{ formatDate(scope.row.createdAt) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="120">
           <template #default="scope">
-            <el-button 
-              size="small" 
-              type="primary" 
-              @click="viewOrder(scope.row)"
-            >
-              查看
-            </el-button>
-            <el-dropdown @command="handleAction">
-              <el-button size="small">
-                更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
+            <el-dropdown @command="handleAction" trigger="click">
+              <el-button size="small" type="primary">
+                操作<el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item :command="`edit-${scope.row.id}`">編輯</el-dropdown-item>
-                  <el-dropdown-item :command="`ship-${scope.row.id}`" v-if="scope.row.status === 'paid'">出貨</el-dropdown-item>
-                  <el-dropdown-item :command="`cancel-${scope.row.id}`" v-if="scope.row.status !== 'cancelled'">取消</el-dropdown-item>
+                  <el-dropdown-item :command="`view-${scope.row.id}`">
+                    <el-icon><View /></el-icon>
+                    查看詳情
+                  </el-dropdown-item>
+                  <el-dropdown-item 
+                    :command="`ship-${scope.row.id}`" 
+                    v-if="scope.row.status === 'paid'"
+                    divided
+                  >
+                    <el-icon><Van /></el-icon>
+                    標記出貨
+                  </el-dropdown-item>
+                  <el-dropdown-item 
+                    :command="`complete-${scope.row.id}`" 
+                    v-if="scope.row.status === 'processing'"
+                  >
+                    <el-icon><Check /></el-icon>
+                    標記完成
+                  </el-dropdown-item>
+                  <el-dropdown-item 
+                    :command="`cancel-${scope.row.id}`" 
+                    v-if="scope.row.status !== 'cancelled' && scope.row.status !== 'delivered'"
+                    divided
+                  >
+                    <el-icon><Close /></el-icon>
+                    取消訂單
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -174,8 +205,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Search, Document, Money, Clock, TrendCharts, ArrowDown } from '@element-plus/icons-vue'
+import { Download, Search, Document, Money, Clock, TrendCharts, ArrowDown, View, Van, Check, Close } from '@element-plus/icons-vue'
 import OrderDetail from '@/components/OrderDetail.vue'
+import { apiRequest } from '@/utils/api'
 
 // 響應式數據
 const loading = ref(false)
@@ -191,42 +223,14 @@ const currentOrder = ref(null)
 
 // 統計數據
 const stats = ref({
-  total: 156,
-  revenue: 328500,
-  pending: 12,
-  avgOrder: 2108
+  total: 0,
+  revenue: 0,
+  pending: 0,
+  avgOrder: 0
 })
 
-// 模擬訂單數據
-const orders = ref([
-  {
-    id: 1,
-    orderNumber: 'ORD20240001',
-    customerName: '陳美玲',
-    customerEmail: 'chen@example.com',
-    totalAmount: 2800,
-    status: 'paid',
-    createdAt: '2024-02-08T10:30:00Z'
-  },
-  {
-    id: 2,
-    orderNumber: 'ORD20240002',
-    customerName: '李志明',
-    customerEmail: 'lee@example.com',
-    totalAmount: 1680,
-    status: 'pending',
-    createdAt: '2024-02-08T14:15:00Z'
-  },
-  {
-    id: 3,
-    orderNumber: 'ORD20240003',
-    customerName: '王小華',
-    customerEmail: 'wang@example.com',
-    totalAmount: 4200,
-    status: 'shipped',
-    createdAt: '2024-02-07T16:45:00Z'
-  }
-])
+// 訂單數據
+const orders = ref([])
 
 // 計算屬性
 const filteredOrders = computed(() => {
@@ -257,8 +261,9 @@ const getStatusType = (status) => {
     paid: 'success',
     processing: 'primary',
     shipped: 'info',
-    completed: 'success',
-    cancelled: 'danger'
+    delivered: 'success',
+    cancelled: 'danger',
+    refunded: 'info'
   }
   return statusMap[status] || 'info'
 }
@@ -269,15 +274,21 @@ const getStatusText = (status) => {
     paid: '已付款',
     processing: '處理中',
     shipped: '已出貨',
-    completed: '已完成',
-    cancelled: '已取消'
+    delivered: '已送達',
+    cancelled: '已取消',
+    refunded: '已退款'
   }
   return statusMap[status] || status
 }
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  return date.toLocaleString('zh-TW')
+  return date.toLocaleDateString('zh-TW', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 const viewOrder = (order) => {
@@ -285,27 +296,33 @@ const viewOrder = (order) => {
   showOrderDialog.value = true
 }
 
-const handleAction = (command) => {
+// 處理下拉選單操作
+const handleAction = async (command) => {
   const [action, orderId] = command.split('-')
-  const order = orders.value.find(o => o.id === parseInt(orderId))
+  const order = orders.value.find(o => o.id === orderId)
+  
+  if (!order) {
+    ElMessage.error('找不到對應的訂單')
+    return
+  }
   
   switch (action) {
-    case 'edit':
-      editOrder(order)
+    case 'view':
+      viewOrder(order)
       break
     case 'ship':
-      shipOrder(order)
+      await shipOrder(order)
+      break
+    case 'complete':
+      await completeOrder(order)
       break
     case 'cancel':
-      cancelOrder(order)
+      await cancelOrder(order)
       break
   }
 }
 
-const editOrder = (order) => {
-  ElMessage.info('編輯訂單功能開發中')
-}
-
+// 標記出貨
 const shipOrder = async (order) => {
   try {
     await ElMessageBox.confirm(
@@ -320,6 +337,26 @@ const shipOrder = async (order) => {
     
     order.status = 'shipped'
     ElMessage.success('訂單已標記為已出貨')
+  } catch {
+    // 用戶取消操作
+  }
+}
+
+// 標記完成
+const completeOrder = async (order) => {
+  try {
+    await ElMessageBox.confirm(
+      `確定要將訂單 ${order.orderNumber} 標記為已完成嗎？`,
+      '確認完成',
+      {
+        confirmButtonText: '確定',
+        cancelButtonText: '取消',
+        type: 'success',
+      }
+    )
+    
+    order.status = 'delivered'
+    ElMessage.success('訂單已標記為已完成')
   } catch {
     // 用戶取消操作
   }
@@ -348,9 +385,91 @@ const exportOrders = () => {
   ElMessage.info('匯出功能開發中')
 }
 
+// 搜尋防抖
+let searchTimer = null
+const handleSearch = () => {
+  // 清除之前的定時器
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  
+  // 設置新的定時器，延遲300ms執行搜尋
+  searchTimer = setTimeout(() => {
+    loadOrders()
+  }, 300)
+}
+
+// 更新統計資料
+const updateStats = () => {
+  const totalOrders = orders.value.length
+  const totalRevenue = orders.value
+    .filter(order => ['paid', 'processing', 'shipped', 'delivered'].includes(order.status))
+    .reduce((sum, order) => sum + order.totalAmount, 0)
+  const pendingOrders = orders.value.filter(order => order.status === 'pending').length
+  const avgOrder = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0
+
+  stats.value = {
+    total: totalOrders,
+    revenue: Math.round(totalRevenue),
+    pending: pendingOrders,
+    avgOrder
+  }
+}
+
+// 載入訂單資料
+const loadOrders = async () => {
+  try {
+    loading.value = true
+    const response = await apiRequest('/orders')
+    const data = await response.json()
+    
+    if (data.success) {
+      // 轉換 API 資料格式以符合前端需求
+      orders.value = data.data.map(order => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: `${order.user.lastName}${order.user.firstName}`,
+        customerEmail: order.user.email,
+        totalAmount: parseFloat(order.totalAmount),
+        status: order.status.toLowerCase(),
+        createdAt: order.createdAt,
+        items: order.items || []
+      }))
+      total.value = data.pagination?.totalCount || orders.value.length
+      
+      // 計算統計資料
+      updateStats()
+    } else {
+      console.error('Failed to load orders:', data.message)
+      orders.value = []
+      total.value = 0
+    }
+  } catch (error) {
+    console.error('Error loading orders:', error)
+    orders.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// 載入統計資料
+const loadStats = async () => {
+  try {
+    const response = await apiRequest('/orders/stats')
+    const data = await response.json()
+    
+    if (data.success) {
+      stats.value = data.data || stats.value
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error)
+  }
+}
+
 onMounted(() => {
-  // 載入訂單數據
-  total.value = orders.value.length
+  loadOrders()
+  loadStats()
 })
 </script>
 
@@ -427,4 +546,22 @@ onMounted(() => {
   display: flex;
   justify-content: center;
 }
+
+.order-number {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.amount-text {
+  font-weight: 600;
+  color: var(--el-color-success);
+}
+
+.date-text {
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+}
+
 </style>

@@ -1,8 +1,8 @@
 # 使用官方 Node.js 18 Alpine 作為基底映像
 FROM node:18-alpine
 
-# 安裝 curl 和 postgresql-client (用於健康檢查和資料庫連線)
-RUN apk add --no-cache curl postgresql-client
+# 安裝 curl, postgresql-client 和 OpenSSL (用於健康檢查、資料庫連線和 Prisma 引擎)
+RUN apk add --no-cache curl postgresql-client openssl openssl-dev
 
 # 設定工作目錄
 WORKDIR /app

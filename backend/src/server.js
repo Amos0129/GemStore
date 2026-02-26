@@ -17,6 +17,12 @@ import wishlistRoutes from './routes/wishlist.js'
 import addressRoutes from './routes/addresses.js'
 import reviewRoutes from './routes/reviews.js'
 import uploadRoutes from './routes/upload.js'
+import adminDashboardRoutes from './routes/admin-dashboard.js'
+import adminMembersRoutes from './routes/admin-members.js'
+import adminCategoriesRoutes from './routes/admin-categories.js'
+import adminFinanceRoutes from './routes/admin-finance.js'
+import adminSettingsRoutes from './routes/admin-settings.js'
+import adminNotificationsRoutes from './routes/admin-notifications.js'
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js'
@@ -40,7 +46,7 @@ const limiter = rateLimit({
 app.use(limiter)
 app.use(helmet())
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3002', 'http://localhost:3003'],
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
   credentials: true
 }))
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
@@ -72,6 +78,12 @@ app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/addresses', addressRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/admin/dashboard', adminDashboardRoutes)
+app.use('/api/admin/members', adminMembersRoutes)
+app.use('/api/admin/categories', adminCategoriesRoutes)
+app.use('/api/admin/finance', adminFinanceRoutes)
+app.use('/api/admin/settings', adminSettingsRoutes)
+app.use('/api/admin/notifications', adminNotificationsRoutes)
 
 // Error handling middleware
 app.use(notFound)
