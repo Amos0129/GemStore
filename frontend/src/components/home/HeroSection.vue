@@ -125,15 +125,28 @@ onUnmounted(() => {
 <style scoped>
 .hero {
   @apply relative h-screen overflow-hidden flex items-center justify-center;
-  background-color: #FFFFFF;
+  background: #ADD8E6;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 182, 193, 0.3);
+  z-index: 1;
 }
 
 .hero-container {
-  @apply relative w-full h-full;
+  @apply relative w-full h-full z-10;
 }
 
 .hero-slide {
   @apply absolute inset-0 opacity-0 transition-opacity duration-1000 flex items-center justify-center;
+  z-index: 2;
 }
 
 .hero-slide.active {
@@ -141,59 +154,71 @@ onUnmounted(() => {
 }
 
 .hero-content {
-  @apply text-center z-10 px-4 max-w-4xl mx-auto;
+  @apply text-center z-10 px-4 max-w-5xl mx-auto;
+  position: relative;
+  z-index: 3;
 }
 
 .hero-title {
   @apply text-5xl md:text-7xl font-bold mb-6;
-  color: #8B5CF6;
+  color: white;
   animation: fadeInUp 0.8s ease-out;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .hero-subtitle {
-  @apply text-xl md:text-2xl mb-8;
-  color: #6B21A8;
+  @apply text-xl md:text-2xl mb-12;
+  color: rgba(255, 255, 255, 0.9);
   animation: fadeInUp 0.8s ease-out 0.2s both;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .cta-btn {
-  @apply text-white text-lg px-8 py-4 rounded-lg font-semibold transition-all duration-300;
-  background-color: #C4B5FD;
-  color: #581C87;
+  @apply text-lg px-10 py-4 rounded-full font-semibold transition-all duration-300;
+  background: white;
+  color: #2E86AB;
+  border: 2px solid #1B4F72;
   animation: fadeInUp 0.8s ease-out 0.4s both;
+  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.4);
 }
 
 .cta-btn:hover {
-  background-color: #8B5CF6;
+  background: #1B4F72;
   color: white;
-  transform: translateY(-2px);
+  border-color: #1B4F72;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(255, 182, 193, 0.3);
 }
 
 .slide-indicators {
-  @apply absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20;
+  @apply absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20;
 }
 
 .indicator {
   @apply w-3 h-3 rounded-full border-none cursor-pointer transition-all duration-300;
-  background-color: rgba(196, 181, 253, 0.4);
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
 }
 
 .indicator.active {
-  @apply w-8;
-  background-color: #8B5CF6;
+  @apply w-10;
+  background-color: #1B4F72;
+  box-shadow: 0 2px 10px rgba(255, 182, 193, 0.3);
 }
 
 .nav-arrow {
-  @apply absolute top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full cursor-pointer transition-all duration-300 flex items-center justify-center z-20;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(196, 181, 253, 0.3);
-  color: #8B5CF6;
+  @apply absolute top-1/2 transform -translate-y-1/2 w-14 h-14 rounded-full cursor-pointer transition-all duration-300 flex items-center justify-center z-20;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid #1B4F72;
+  color: white;
+  backdrop-filter: blur(20px);
 }
 
 .nav-arrow:hover {
-  background-color: #8B5CF6;
-  border-color: #8B5CF6;
+  background: #1B4F72;
+  border-color: #1B4F72;
   color: white;
+  transform: translateY(-50%) scale(1.05);
 }
 
 .nav-arrow.prev {

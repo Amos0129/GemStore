@@ -122,7 +122,7 @@ const openKuseLink = () => {
 .footer {
   @apply mt-auto;
   background-color: #FAFAFA;
-  border-top: 1px solid rgba(196, 181, 253, 0.2);
+  border-top: 1px solid rgba(173, 216, 230, 0.2);
 }
 
 .footer-content {
@@ -131,12 +131,12 @@ const openKuseLink = () => {
 
 .footer-section h3 {
   @apply text-xl font-semibold mb-4;
-  color: #8B5CF6;
+  color: #2E86AB;
 }
 
 .company-description {
   @apply text-sm leading-relaxed mb-6;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .social-links {
@@ -146,12 +146,12 @@ const openKuseLink = () => {
 .social-btn {
   @apply w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300;
   background-color: #FFFFFF;
-  border: 1px solid rgba(196, 181, 253, 0.3);
-  color: #8B5CF6;
+  border: 1px solid rgba(46, 134, 171, 0.3);
+  color: #2E86AB;
 }
 
 .social-btn:hover {
-  background-color: #C4B5FD;
+  background-color: #1B4F72;
   color: white;
 }
 
@@ -161,11 +161,11 @@ const openKuseLink = () => {
 
 .footer-links a {
   @apply transition-colors duration-300 text-sm;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .footer-links a:hover {
-  color: #F8BBD9;
+  color: #1B4F72;
 }
 
 .contact-info {
@@ -174,27 +174,27 @@ const openKuseLink = () => {
 
 .contact-item {
   @apply flex items-center space-x-3 text-sm;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .contact-item i {
   @apply w-4;
-  color: #C4B5FD;
+  color: #1B4F72;
 }
 
 .live-schedule {
   @apply mt-6 p-4 rounded-lg;
-  background-color: rgba(196, 181, 253, 0.15);
+  background-color: rgba(46, 134, 171, 0.15);
 }
 
 .live-schedule h4 {
   @apply font-semibold mb-2;
-  color: #8B5CF6;
+  color: #2E86AB;
 }
 
 .live-schedule p {
   @apply text-sm;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .container {
@@ -204,7 +204,7 @@ const openKuseLink = () => {
 .footer-bottom {
   @apply py-6;
   background-color: #F3F4F6;
-  border-top: 1px solid rgba(196, 181, 253, 0.2);
+  border-top: 1px solid rgba(173, 216, 230, 0.2);
 }
 
 .footer-bottom-content {
@@ -213,12 +213,12 @@ const openKuseLink = () => {
 
 .copyright {
   @apply text-sm;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .payment-methods {
   @apply flex items-center space-x-4 text-xl;
-  color: #C4B5FD;
+  color: #1B4F72;
 }
 
 .kuse-branding {

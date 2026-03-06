@@ -5,6 +5,7 @@
       <div class="flex items-center space-x-3">
         <select
           v-model="statusFilter"
+          @change="handleStatusFilterChange"
           class="px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-sm"
         >
           <option value="">所有狀態</option>
@@ -64,12 +65,12 @@
             class="flex items-center space-x-4"
           >
             <img
-              :src="item.image"
-              :alt="item.name"
+              :src="item.product?.images?.[0]?.url || item.image || 'https://via.placeholder.com/64'"
+              :alt="item.product?.name || item.name"
               class="w-16 h-16 object-cover rounded-lg"
             />
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900">{{ item.name }}</h4>
+              <h4 class="font-medium text-gray-900">{{ item.product?.name || item.name }}</h4>
               <p class="text-sm text-gray-600">數量：{{ item.quantity }}</p>
             </div>
             <div class="text-right">
@@ -86,7 +87,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
-            <span class="text-sm text-gray-600">配送至：{{ order.shippingAddress }}</span>
+            <span class="text-sm text-gray-600">配送至：{{ order.shippingAddress?.address || '未設定' }}</span>
           </div>
           <div class="flex items-center space-x-3">
             <button
@@ -152,6 +153,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/store/cart'
+import { api } from '@/api'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -159,70 +161,9 @@ const cartStore = useCartStore()
 const statusFilter = ref('')
 const isLoading = ref(false)
 const hasMore = ref(false)
-
-const orders = ref([
-  {
-    id: 1,
-    orderNumber: 'ORD20240115001',
-    status: 'delivered',
-    total: 3580,
-    createdAt: new Date('2024-01-15'),
-    shippingAddress: '台北市信義區松山路100號',
-    trackingNumber: null,
-    items: [
-      {
-        id: 1,
-        name: '紫水晶項鍊',
-        price: 1580,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-      },
-      {
-        id: 2,
-        name: '玫瑰金手鍊',
-        price: 2000,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-      }
-    ]
-  },
-  {
-    id: 2,
-    orderNumber: 'ORD20240110001',
-    status: 'shipping',
-    total: 4580,
-    createdAt: new Date('2024-01-10'),
-    shippingAddress: '台北市信義區松山路100號',
-    trackingNumber: 'TW1234567890',
-    items: [
-      {
-        id: 3,
-        name: '鑽石耳環',
-        price: 4580,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-      }
-    ]
-  },
-  {
-    id: 3,
-    orderNumber: 'ORD20240105001',
-    status: 'pending',
-    total: 6800,
-    createdAt: new Date('2024-01-05'),
-    shippingAddress: '台北市信義區松山路100號',
-    trackingNumber: null,
-    items: [
-      {
-        id: 4,
-        name: '藍寶石戒指',
-        price: 6800,
-        quantity: 1,
-        image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-      }
-    ]
-  }
-])
+const orders = ref([])
+const currentPage = ref(1)
+const totalPages = ref(1)
 
 const filteredOrders = computed(() => {
   if (!statusFilter.value) {
@@ -293,25 +234,54 @@ const viewOrderDetail = (order) => {
   router.push(`/order/${order.id}`)
 }
 
-const loadMoreOrders = async () => {
-  isLoading.value = true
-  
+// 獲取訂單資料
+const fetchOrders = async (page = 1, status = '') => {
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    isLoading.value = true
     
-    // Add more orders (simulate)
-    hasMore.value = false // No more orders to load
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: '10'
+    })
+    
+    if (status) {
+      params.append('status', status)
+    }
+    
+    const response = await api.get(`/auth/orders?${params}`)
+    
+    if (response.data?.success && response.data?.data) {
+      if (page === 1) {
+        orders.value = response.data.data
+      } else {
+        orders.value.push(...response.data.data)
+      }
+      
+      currentPage.value = response.data.pagination.page
+      totalPages.value = response.data.pagination.totalPages
+      hasMore.value = currentPage.value < totalPages.value
+    }
   } catch (error) {
-    console.error('Load more orders failed:', error)
+    console.error('獲取訂單失敗:', error)
   } finally {
     isLoading.value = false
   }
 }
 
-onMounted(() => {
-  // Check if there are more orders to load
-  hasMore.value = orders.value.length >= 10 // Example condition
+const loadMoreOrders = async () => {
+  if (!hasMore.value || isLoading.value) return
+  
+  await fetchOrders(currentPage.value + 1, statusFilter.value)
+}
+
+// 監聽狀態篩選變化
+const handleStatusFilterChange = async () => {
+  currentPage.value = 1
+  await fetchOrders(1, statusFilter.value)
+}
+
+onMounted(async () => {
+  await fetchOrders()
 })
 </script>
 

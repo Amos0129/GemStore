@@ -23,6 +23,7 @@ import adminCategoriesRoutes from './routes/admin-categories.js'
 import adminFinanceRoutes from './routes/admin-finance.js'
 import adminSettingsRoutes from './routes/admin-settings.js'
 import adminNotificationsRoutes from './routes/admin-notifications.js'
+import adminCartsRoutes from './routes/admin-carts.js'
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js'
@@ -83,7 +84,9 @@ app.use('/api/admin/members', adminMembersRoutes)
 app.use('/api/admin/categories', adminCategoriesRoutes)
 app.use('/api/admin/finance', adminFinanceRoutes)
 app.use('/api/admin/settings', adminSettingsRoutes)
+app.use('/api/settings', adminSettingsRoutes)
 app.use('/api/admin/notifications', adminNotificationsRoutes)
+app.use('/api/admin/carts', adminCartsRoutes)
 
 // Error handling middleware
 app.use(notFound)

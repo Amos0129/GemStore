@@ -17,7 +17,7 @@
             v-model="filters.search"
             type="text"
             placeholder="搜尋商品..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
           />
         </div>
 
@@ -27,13 +27,16 @@
           <select
             id="category"
             v-model="filters.category"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
           >
             <option value="">所有分類</option>
-            <option value="necklaces">項鍊</option>
-            <option value="bracelets">手鍊</option>
-            <option value="earrings">耳環</option>
-            <option value="rings">戒指</option>
+            <option 
+              v-for="category in productStore.categories" 
+              :key="category.id"
+              :value="category.id"
+            >
+              {{ category.name }}
+            </option>
           </select>
         </div>
 
@@ -43,7 +46,7 @@
           <select
             id="priceRange"
             v-model="filters.priceRange"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
           >
             <option value="">所有價格</option>
             <option value="0-1000">NT$ 0 - 1,000</option>
@@ -59,7 +62,7 @@
           <select
             id="sort"
             v-model="sortBy"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
           >
             <option value="default">預設排序</option>
             <option value="price-low">價格：低到高</option>
@@ -79,7 +82,7 @@
           <button
             v-if="hasActiveFilters"
             @click="clearFilters"
-            class="text-purple-600 hover:text-purple-700 font-medium"
+            class="font-medium" style="color: #60A5FA;"
           >
             清除篩選
           </button>
@@ -91,8 +94,9 @@
             @click="viewMode = 'grid'"
             :class="[
               'p-2 rounded-md',
-              viewMode === 'grid' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:text-gray-600'
+              viewMode === 'grid' ? '' : 'text-gray-400 hover:text-gray-600'
             ]"
+            :style="viewMode === 'grid' ? { color: '#60A5FA', backgroundColor: 'rgba(96, 165, 250, 0.1)' } : {}"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
@@ -102,8 +106,9 @@
             @click="viewMode = 'list'"
             :class="[
               'p-2 rounded-md',
-              viewMode === 'list' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:text-gray-600'
+              viewMode === 'list' ? '' : 'text-gray-400 hover:text-gray-600'
             ]"
+            :style="viewMode === 'list' ? { color: '#60A5FA', backgroundColor: 'rgba(96, 165, 250, 0.1)' } : {}"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
@@ -121,6 +126,9 @@
           v-for="product in paginatedProducts"
           :key="product.id"
           :product="product"
+          :is-wishlisted="wishlistStore.isInWishlist(product.id)"
+          @add-to-cart="addToCart"
+          @toggle-wishlist="toggleWishlist"
         />
       </div>
 
@@ -142,11 +150,11 @@
             
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-start mb-2">
-                <router-link :to="`/product/${product.id}`" class="hover:text-purple-600">
+                <router-link :to="`/product/${product.id}`" class="hover:underline" style="color: #60A5FA;">
                   <h3 class="text-xl font-semibold text-gray-900">{{ product.name }}</h3>
                 </router-link>
                 <div class="flex items-center space-x-2">
-                  <span class="text-2xl font-bold text-purple-600">NT$ {{ product.price.toLocaleString() }}</span>
+                  <span class="text-2xl font-bold" style="color: #60A5FA;">NT$ {{ product.price.toLocaleString() }}</span>
                   <span v-if="product.originalPrice" class="text-lg text-gray-500 line-through">
                     NT$ {{ product.originalPrice.toLocaleString() }}
                   </span>
@@ -184,7 +192,10 @@
                   </button>
                   <button
                     @click="addToCart(product)"
-                    class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors font-medium"
+                    class="text-white px-6 py-2 rounded-md transition-colors font-medium"
+                    style="background-color: #60A5FA;"
+                    @mouseover="$event.target.style.backgroundColor = '#3B82F6'"
+                    @mouseout="$event.target.style.backgroundColor = '#60A5FA'"
                   >
                     加入購物車
                   </button>
@@ -213,9 +224,10 @@
             :class="[
               'px-3 py-2 rounded-md text-sm font-medium',
               page === currentPage
-                ? 'bg-purple-600 text-white'
-                : 'text-gray-700 hover:text-purple-600'
+                ? 'text-white'
+                : 'text-gray-700'
             ]"
+            :style="page === currentPage ? { backgroundColor: '#60A5FA' } : { color: '#60A5FA' }"
           >
             {{ page }}
           </button>
@@ -240,7 +252,10 @@
       <p class="text-gray-500 mb-4">請嘗試調整篩選條件或清除篩選</p>
       <button
         @click="clearFilters"
-        class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+        class="inline-block text-white px-6 py-3 rounded-lg transition-colors"
+        style="background-color: #60A5FA;"
+        @mouseover="$event.target.style.backgroundColor = '#3B82F6'"
+        @mouseout="$event.target.style.backgroundColor = '#60A5FA'"
       >
         清除篩選
       </button>
@@ -253,11 +268,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useProductStore } from '@/store/products'
 import { useCartStore } from '@/store/cart'
 import { useWishlistStore } from '@/store/wishlist'
+import { useToast } from '@/composables/useToast'
 import ProductCard from '@/components/product/ProductCard.vue'
 
 const productStore = useProductStore()
 const cartStore = useCartStore()
 const wishlistStore = useWishlistStore()
+const { showToast } = useToast()
 
 const viewMode = ref('grid')
 const currentPage = ref(1)
@@ -288,7 +305,7 @@ const filteredProducts = computed(() => {
 
   // Apply category filter
   if (filters.value.category) {
-    products = products.filter(product => product.category === filters.value.category)
+    products = products.filter(product => product.categoryId === filters.value.category)
   }
 
   // Apply price filter
@@ -356,14 +373,26 @@ const clearFilters = () => {
   sortBy.value = 'default'
 }
 
-const addToCart = (product) => {
-  cartStore.addItem({
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    image: product.image,
-    description: product.description.substring(0, 100) + '...'
-  })
+const addToCart = async (product) => {
+  try {
+    console.log('Adding to cart:', product)
+    await cartStore.addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      description: product.description?.substring(0, 100) + '...' || ''
+    })
+    showToast(`${product.name} 已加入購物車`, 'success')
+    
+    // 自動打開購物車側邊欄
+    setTimeout(() => {
+      cartStore.openCart()
+    }, 500)
+  } catch (error) {
+    showToast('加入購物車失敗，請稍後再試', 'error')
+    console.error('Add to cart error:', error)
+  }
 }
 
 const toggleWishlist = (product) => {
@@ -379,8 +408,12 @@ watch([filters, sortBy], () => {
   currentPage.value = 1
 }, { deep: true })
 
-onMounted(() => {
-  productStore.fetchProducts()
+onMounted(async () => {
+  // 載入商品和分類資料
+  await Promise.all([
+    productStore.fetchProducts(),
+    productStore.fetchCategories()
+  ])
 })
 </script>
 
@@ -444,17 +477,17 @@ onMounted(() => {
   }
   
   .products-grid-page::-webkit-scrollbar-track {
-    background: rgba(196, 181, 253, 0.15);
+    background: rgba(173, 216, 230, 0.15);
     border-radius: 2px;
   }
   
   .products-grid-page::-webkit-scrollbar-thumb {
-    background: #C4B5FD;
+    background: #1B4F72;
     border-radius: 2px;
   }
   
   .products-grid-page::-webkit-scrollbar-thumb:hover {
-    background: #8B5CF6;
+    background: #2E86AB;
   }
 
   /* Update page header for mobile */
@@ -478,6 +511,25 @@ onMounted(() => {
   .space-y-6 {
     display: none;
   }
+}
+
+/* Global page scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(173, 216, 230, 0.15);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1B4F72;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2E86AB;
 }
 
 @media (max-width: 480px) {

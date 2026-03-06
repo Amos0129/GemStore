@@ -213,34 +213,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { api } from '@/api'
 
 const showAddForm = ref(false)
 const editingAddress = ref(null)
 const isSubmitting = ref(false)
-
-const addresses = ref([
-  {
-    id: 1,
-    name: '王小美',
-    phone: '0912345678',
-    city: '台北市',
-    district: '信義區',
-    address: '松山路100號',
-    zipCode: '110',
-    isDefault: true
-  },
-  {
-    id: 2,
-    name: '王小美',
-    phone: '0912345678',
-    city: '台北市',
-    district: '大安區',
-    address: '復興南路200號',
-    zipCode: '106',
-    isDefault: false
-  }
-])
+const isLoading = ref(false)
+const addresses = ref([])
 
 const addressForm = reactive({
   name: '',
@@ -251,6 +231,22 @@ const addressForm = reactive({
   zipCode: '',
   isDefault: false
 })
+
+// 獲取地址清單
+const fetchAddresses = async () => {
+  try {
+    isLoading.value = true
+    const response = await api.get('/addresses')
+    
+    if (response.data?.success && response.data?.data) {
+      addresses.value = response.data.data
+    }
+  } catch (error) {
+    console.error('獲取地址失敗:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
 
 const resetForm = () => {
   Object.keys(addressForm).forEach(key => {
@@ -281,37 +277,26 @@ const saveAddress = async () => {
   isSubmitting.value = true
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
     if (editingAddress.value) {
-      // Update existing address
-      const index = addresses.value.findIndex(addr => addr.id === editingAddress.value.id)
-      if (index !== -1) {
-        addresses.value[index] = { ...addressForm, id: editingAddress.value.id }
+      // 更新現有地址
+      const response = await api.put(`/addresses/${editingAddress.value.id}`, addressForm)
+      
+      if (response.data?.success) {
+        await fetchAddresses() // 重新載入地址清單
       }
     } else {
-      // Add new address
-      const newAddress = {
-        ...addressForm,
-        id: Date.now() // Generate simple ID
+      // 新增地址
+      const response = await api.post('/addresses', addressForm)
+      
+      if (response.data?.success) {
+        await fetchAddresses() // 重新載入地址清單
       }
-      addresses.value.push(newAddress)
     }
-    
-    // If set as default, remove default from others
-    if (addressForm.isDefault) {
-      addresses.value.forEach(addr => {
-        if (addr.id !== (editingAddress.value?.id || Date.now())) {
-          addr.isDefault = false
-        }
-      })
-    }
-    
+
     closeForm()
   } catch (error) {
-    console.error('Save address failed:', error)
-    alert('儲存失敗，請稍後再試')
+    console.error('儲存地址失敗:', error)
+    alert(error.response?.data?.message || '儲存地址失敗')
   } finally {
     isSubmitting.value = false
   }
@@ -319,27 +304,35 @@ const saveAddress = async () => {
 
 const setDefaultAddress = async (addressId) => {
   try {
-    addresses.value.forEach(addr => {
-      addr.isDefault = addr.id === addressId
-    })
+    const response = await api.patch(`/addresses/${addressId}/default`)
+    
+    if (response.data?.success) {
+      await fetchAddresses() // 重新載入地址清單
+    }
   } catch (error) {
-    console.error('Set default address failed:', error)
+    console.error('設定預設地址失敗:', error)
+    alert(error.response?.data?.message || '設定預設地址失敗')
   }
 }
 
 const deleteAddress = async (addressId) => {
-  if (!confirm('確定要刪除此地址嗎？')) return
+  if (!confirm('確定要刪除這個地址嗎？')) return
   
   try {
-    const index = addresses.value.findIndex(addr => addr.id === addressId)
-    if (index !== -1) {
-      addresses.value.splice(index, 1)
+    const response = await api.delete(`/addresses/${addressId}`)
+    
+    if (response.data?.success) {
+      await fetchAddresses() // 重新載入地址清單
     }
   } catch (error) {
-    console.error('Delete address failed:', error)
-    alert('刪除失敗，請稍後再試')
+    console.error('刪除地址失敗:', error)
+    alert(error.response?.data?.message || '刪除地址失敗')
   }
 }
+
+onMounted(() => {
+  fetchAddresses()
+})
 </script>
 
 <style scoped>

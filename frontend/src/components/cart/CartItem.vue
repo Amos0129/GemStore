@@ -82,7 +82,7 @@ const decreaseQuantity = () => {
 <style scoped>
 .cart-item {
   @apply flex items-start space-x-4 p-4 bg-white rounded-lg border;
-  border-color: #E9D5FF;
+  border-color: rgba(173, 216, 230, 0.3);
 }
 
 .item-image {
@@ -95,8 +95,8 @@ const decreaseQuantity = () => {
 
 .placeholder-image {
   @apply w-full h-full rounded-lg flex items-center justify-center text-2xl;
-  background-color: #F5F3FF;
-  color: #C4B5FD;
+  background-color: #F0F8FF;
+  color: #2E86AB;
 }
 
 .item-info {
@@ -105,12 +105,12 @@ const decreaseQuantity = () => {
 
 .item-name {
   @apply font-semibold text-sm mb-1 truncate;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .item-price {
   @apply font-medium text-sm mb-3;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .quantity-control {
@@ -119,12 +119,12 @@ const decreaseQuantity = () => {
 
 .qty-btn {
   @apply w-8 h-8 bg-white border rounded-md flex items-center justify-center transition-all duration-300;
-  border-color: #C4B5FD;
-  color: #8B5CF6;
+  border-color: #2E86AB;
+  color: #2E86AB;
 }
 
 .qty-btn:hover:not(:disabled) {
-  background-color: #C4B5FD;
+  background-color: #1B4F72;
   color: white;
 }
 
@@ -134,7 +134,7 @@ const decreaseQuantity = () => {
 
 .qty-value {
   @apply font-medium min-w-8 text-center;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .item-actions {
@@ -143,16 +143,16 @@ const decreaseQuantity = () => {
 
 .item-total {
   @apply font-bold;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .remove-item {
   @apply transition-colors duration-300 p-1;
-  color: #F8BBD9;
+  color: #1B4F72;
 }
 
 .remove-item:hover {
-  color: #EC4899;
+  color: #FF8FA3;
 }
 
 /* Mobile adjustments */

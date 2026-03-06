@@ -156,32 +156,37 @@ const openQuickView = (event) => {
 <style scoped>
 .product-card {
   @apply relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-2;
-  background-color: #FAF5FF;
-  border: 1px solid #E9D5FF;
-  box-shadow: 0 4px 20px rgba(147, 51, 234, 0.08);
+  background-color: #F0F8FF;
+  border: 1px solid rgba(173, 216, 230, 0.3);
+  box-shadow: 0 4px 20px rgba(173, 216, 230, 0.15);
 }
 
 .product-card:hover {
-  border-color: #C4B5FD;
-  box-shadow: 0 8px 30px rgba(147, 51, 234, 0.15);
+  border-color: #1B4F72;
+  box-shadow: 0 8px 30px rgba(255, 182, 193, 0.2);
 }
 
 .product-badge {
   @apply absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium z-10;
-  color: #581C87;
+  color: #1B4F72;
 }
 
 .wishlist-btn {
   @apply absolute top-3 right-3 w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-all duration-300 z-10;
   background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid #C4B5FD;
-  color: #8B5CF6;
+  border: 1px solid #E5E7EB;
+  color: #9CA3AF;
 }
 
-.wishlist-btn:hover,
+.wishlist-btn:hover {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
 .wishlist-btn.active {
-  background-color: #C4B5FD;
-  border-color: #C4B5FD;
+  background-color: #EF4444;
+  border-color: #EF4444;
   color: white;
 }
 
@@ -200,18 +205,18 @@ const openQuickView = (event) => {
 
 .placeholder-icon {
   @apply text-6xl;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .quick-view-overlay {
   @apply absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300;
-  background-color: rgba(196, 181, 253, 0.8);
+  background-color: rgba(255, 182, 193, 0.8);
 }
 
 .quick-view-btn {
   @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
   background-color: #FFFFFF;
-  color: #581C87;
+  color: #1B4F72;
 }
 
 .product-info {
@@ -220,11 +225,11 @@ const openQuickView = (event) => {
 
 .product-name {
   @apply text-lg font-semibold mb-2 cursor-pointer transition-colors duration-300;
-  color: #581C87;
+  color: #1B4F72;
 }
 
 .product-name:hover {
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .product-rating {
@@ -246,7 +251,7 @@ const openQuickView = (event) => {
 
 .current-price {
   @apply text-2xl font-bold;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .original-price {
@@ -256,8 +261,8 @@ const openQuickView = (event) => {
 
 .discount-badge {
   @apply px-2 py-1 rounded text-xs font-medium;
-  background-color: #C4B5FD;
-  color: #581C87;
+  background-color: #1B4F72;
+  color: white;
 }
 
 .product-actions {
@@ -266,17 +271,17 @@ const openQuickView = (event) => {
 
 .add-cart-btn {
   @apply w-full font-medium py-3 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2;
-  background: linear-gradient(135deg, #C4B5FD 0%, #DDD6FE 100%);
-  color: #581C87;
-  border: 1px solid #C4B5FD;
+  background: #2E86AB;
+  color: white;
+  border: 1px solid #2E86AB;
 }
 
 .add-cart-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  background: #5DADE2;
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
-  border-color: #8B5CF6;
+  box-shadow: 0 4px 16px rgba(255, 182, 193, 0.3);
+  border-color: #ADD8E6;
 }
 
 .add-cart-btn:disabled {
@@ -290,7 +295,7 @@ const openQuickView = (event) => {
 .product-card::before {
   content: '';
   @apply absolute top-0 left-0 w-full h-1;
-  background: linear-gradient(90deg, #C4B5FD 0%, #DDD6FE 100%);
+  background: #1B4F72;
 }
 
 .product-card:has(.add-cart-btn:disabled)::before {
@@ -320,7 +325,7 @@ const openQuickView = (event) => {
   
   .quick-view-overlay {
     @apply opacity-100;
-    background-color: rgba(196, 181, 253, 0.6);
+    background-color: rgba(255, 182, 193, 0.6);
   }
   
   .quick-view-btn {

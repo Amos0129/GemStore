@@ -26,6 +26,7 @@
           v-for="product in displayProducts" 
           :key="product.id"
           :product="product"
+          :is-wishlisted="wishlistStore.isInWishlist(product.id)"
           @add-to-cart="handleAddToCart"
           @toggle-wishlist="handleToggleWishlist"
         />
@@ -43,6 +44,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useCartStore } from '@/store/cart'
+import { useWishlistStore } from '@/store/wishlist'
 import { useToast } from '@/composables/useToast'
 
 import ProductCard from '@/components/product/ProductCard.vue'
@@ -72,6 +74,7 @@ const props = defineProps({
 })
 
 const cartStore = useCartStore()
+const wishlistStore = useWishlistStore()
 const { showToast } = useToast()
 
 const displayProducts = computed(() => {
@@ -84,8 +87,13 @@ const handleAddToCart = (product) => {
 }
 
 const handleToggleWishlist = (product) => {
-  // TODO: 實現願望清單功能
-  showToast(`${product.name} 已加入收藏`, 'success')
+  if (wishlistStore.isInWishlist(product.id)) {
+    wishlistStore.removeItem(product.id)
+    showToast(`${product.name} 已從收藏移除`, 'success')
+  } else {
+    wishlistStore.addItem(product)
+    showToast(`${product.name} 已加入收藏`, 'success')
+  }
 }
 </script>
 
@@ -109,16 +117,16 @@ const handleToggleWishlist = (product) => {
 
 .section-title {
   @apply text-3xl md:text-4xl font-bold;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .view-all-btn {
   @apply font-medium flex items-center transition-colors duration-300;
-  color: #C4B5FD;
+  color: #1B4F72;
 }
 
 .view-all-btn:hover {
-  color: #F8BBD9;
+  color: #1B4F72;
 }
 
 .products-grid {
@@ -143,17 +151,17 @@ const handleToggleWishlist = (product) => {
   }
   
   .products-grid::-webkit-scrollbar-track {
-    background: rgba(196, 181, 253, 0.15);
+    background: rgba(173, 216, 230, 0.15);
     border-radius: 2px;
   }
   
   .products-grid::-webkit-scrollbar-thumb {
-    background: #C4B5FD;
+    background: #1B4F72;
     border-radius: 2px;
   }
   
   .products-grid::-webkit-scrollbar-thumb:hover {
-    background: #8B5CF6;
+    background: #2E86AB;
   }
 }
 

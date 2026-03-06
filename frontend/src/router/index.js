@@ -40,21 +40,21 @@ const routes = [
   },
   {
     path: '/auth',
+    name: 'Auth',
     component: () => import('@/pages/Auth.vue'),
-    children: [
-      {
-        path: 'login',
-        name: 'Login',
-        component: () => import('@/components/auth/LoginForm.vue'),
-        meta: { title: '登入 - 晶礦飾品' }
-      },
-      {
-        path: 'register',
-        name: 'Register',
-        component: () => import('@/components/auth/RegisterForm.vue'),
-        meta: { title: '註冊 - 晶礦飾品' }
-      }
-    ]
+    meta: { title: '登入/註冊 - 晶礦飾品' }
+  },
+  {
+    path: '/auth/login',
+    name: 'Login',
+    component: () => import('@/pages/Auth.vue'),
+    meta: { title: '登入 - 晶礦飾品' }
+  },
+  {
+    path: '/auth/register',
+    name: 'Register',
+    component: () => import('@/pages/Auth.vue'),
+    meta: { title: '註冊 - 晶礦飾品' }
   },
   {
     path: '/profile',
@@ -147,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
   
   // 檢查是否需要登入
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
+    next({ name: 'Auth', query: { redirect: to.fullPath } })
     return
   }
   

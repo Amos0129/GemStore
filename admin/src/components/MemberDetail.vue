@@ -42,33 +42,74 @@
       </el-col>
     </el-row>
 
-    <el-divider>最近訂單</el-divider>
-    
-    <el-table :data="recentOrders" style="width: 100%">
-      <el-table-column prop="orderNumber" label="訂單編號" />
-      <el-table-column prop="amount" label="金額">
-        <template #default="scope">
-          ${{ scope.row.amount.toLocaleString() }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="狀態">
-        <template #default="scope">
-          <el-tag :type="getOrderStatusType(scope.row.status)">
-            {{ getOrderStatusText(scope.row.status) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="下單時間">
-        <template #default="scope">
-          {{ formatDate(scope.row.createdAt) }}
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-row :gutter="20">
+      <el-col :span="12">
+        <el-divider>購物車內容</el-divider>
+        
+        <el-card v-loading="cartLoading">
+          <template #header v-if="cartData.items && cartData.items.length > 0">
+            <div class="cart-header">
+              <span>購物車 ({{ cartData.totalItems }} 件商品)</span>
+              <span class="cart-total">總計：NT$ {{ cartData.totalAmount?.toLocaleString() }}</span>
+            </div>
+          </template>
+          
+          <div v-if="cartData.items && cartData.items.length > 0" class="cart-items">
+            <div 
+              v-for="item in cartData.items" 
+              :key="item.id"
+              class="cart-item"
+            >
+              <img 
+                :src="item.product.image || '/placeholder.jpg'" 
+                :alt="item.product.name"
+                class="item-image"
+              />
+              <div class="item-info">
+                <div class="item-name">{{ item.product.name }}</div>
+                <div class="item-details">
+                  {{ item.quantity }}x NT$ {{ item.product.price?.toLocaleString() }}
+                  = NT$ {{ item.subtotal?.toLocaleString() }}
+                </div>
+                <div class="item-category">{{ item.product.category }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <el-empty v-else description="購物車是空的" />
+        </el-card>
+      </el-col>
+      
+      <el-col :span="12">
+        <el-divider>最近訂單</el-divider>
+        
+        <el-table :data="recentOrders" style="width: 100%">
+          <el-table-column prop="orderNumber" label="訂單編號" />
+          <el-table-column prop="amount" label="金額">
+            <template #default="scope">
+              NT$ {{ scope.row.amount?.toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="狀態">
+            <template #default="scope">
+              <el-tag :type="getOrderStatusType(scope.row.status)">
+                {{ getOrderStatusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createdAt" label="下單時間">
+            <template #default="scope">
+              {{ formatDate(scope.row.createdAt) }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const props = defineProps({
   member: {
@@ -76,6 +117,69 @@ const props = defineProps({
     required: true
   }
 })
+
+// 購物車數據
+const cartData = ref({
+  items: [],
+  totalItems: 0,
+  totalAmount: 0
+})
+const cartLoading = ref(false)
+
+// 獲取用戶購物車數據
+const fetchUserCart = async () => {
+  if (!props.member?.id) return
+  
+  try {
+    cartLoading.value = true
+    console.log('Fetching cart for user:', props.member.id)
+    
+    const token = localStorage.getItem('admin_token') // 確保使用正確的token
+    const response = await fetch(`http://localhost:5000/api/admin/carts?userId=${props.member.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    console.log('Cart API response status:', response.status)
+    const data = await response.json()
+    console.log('Cart API response data:', data)
+    
+    if (data.success && data.data.carts.length > 0) {
+      const userCart = data.data.carts[0] // 取第一個（應該只有一個用戶的數據）
+      cartData.value = {
+        items: userCart.items,
+        totalItems: userCart.totalItems,
+        totalAmount: userCart.totalAmount
+      }
+      console.log('Cart data set:', cartData.value)
+    } else {
+      console.log('No cart data found for user')
+      cartData.value = {
+        items: [],
+        totalItems: 0,
+        totalAmount: 0
+      }
+    }
+  } catch (error) {
+    console.error('獲取購物車數據失敗:', error)
+    cartData.value = {
+      items: [],
+      totalItems: 0,
+      totalAmount: 0
+    }
+  } finally {
+    cartLoading.value = false
+  }
+}
+
+// 監聽 member 變化
+watch(() => props.member?.id, (newId) => {
+  if (newId) {
+    fetchUserCart()
+  }
+}, { immediate: true })
 
 // 模擬最近訂單
 const recentOrders = computed(() => [
@@ -144,5 +248,87 @@ const formatDate = (dateString) => {
 <style scoped>
 .member-detail {
   padding: 20px;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.cart-total {
+  color: var(--el-color-primary);
+  font-size: 16px;
+}
+
+.cart-items {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 12px;
+  border: 1px solid var(--el-border-color-light);
+}
+
+.item-info {
+  flex: 1;
+}
+
+.item-name {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.item-details {
+  color: var(--el-color-primary);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.item-category {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .cart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .item-image {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .item-name {
+    font-size: 13px;
+  }
+  
+  .item-details {
+    font-size: 12px;
+  }
 }
 </style>

@@ -11,8 +11,8 @@
   --accent-pink: #EC4899;
   --accent-purple: #8B5CF6;
   --accent-lavender: #C4B5FD;
-  --text-primary: #6B21A8;
-  --text-secondary: #A78BFA;
+  --text-primary: #1E3A8A;
+  --text-secondary: #3B82F6;
   --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
@@ -32,12 +32,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #E91E63;
+  background-color: #1E40AF;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #9C27B0;
+  background-color: #2563EB;
 }
 
 /* 動畫 */

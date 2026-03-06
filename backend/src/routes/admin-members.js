@@ -113,18 +113,12 @@ router.get('/', async (req, res) => {
     const [members, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          phone: true,
-          avatar: true,
-          membershipLevel: true,
-          totalSpent: true,
-          totalOrders: true,
-          isActive: true,
-          createdAt: true
+        include: {
+          cart: {
+            select: {
+              quantity: true
+            }
+          }
         },
         skip: offset,
         take: parseInt(limit),
@@ -133,18 +127,27 @@ router.get('/', async (req, res) => {
       prisma.user.count({ where })
     ])
 
-    const formattedMembers = members.map(member => ({
-      id: member.id,
-      name: `${member.firstName} ${member.lastName}`,
-      email: member.email,
-      phone: member.phone || '-',
-      avatar: member.avatar,
-      level: member.membershipLevel?.toLowerCase() || 'bronze',
-      totalSpent: Number(member.totalSpent || 0),
-      orderCount: member.totalOrders || 0,
-      status: member.isActive ? 'active' : 'inactive',
-      createdAt: member.createdAt.toISOString()
-    }))
+    const formattedMembers = members.map(member => {
+      // 計算購物車商品總數
+      const cartItems = member.cart?.reduce((sum, item) => sum + item.quantity, 0) || 0
+      
+      return {
+        id: member.id,
+        name: `${member.firstName} ${member.lastName}`,
+        email: member.email,
+        phone: member.phone || '-',
+        avatar: member.avatar,
+        level: member.membershipLevel?.toLowerCase() || 'bronze',
+        totalSpent: Number(member.totalSpent || 0),
+        orderCount: member.totalOrders || 0,
+        cartItems: cartItems,
+        status: member.isActive ? 'active' : 'inactive',
+        createdAt: member.createdAt.toISOString(),
+        // 保留完整用戶資料供詳情使用
+        firstName: member.firstName,
+        lastName: member.lastName
+      }
+    })
 
     res.json({
       success: true,

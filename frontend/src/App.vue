@@ -27,10 +27,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useProductStore } from '@/store/products'
+import { useCartStore } from '@/store/cart'
 
 import Navbar from '@/components/layout/Navbar.vue'
 import Footer from '@/components/layout/Footer.vue'
@@ -41,6 +42,7 @@ import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 const route = useRoute()
 const userStore = useUserStore()
 const productsStore = useProductStore()
+const cartStore = useCartStore()
 
 // 計算是否顯示導航欄和頁腳
 const showNavbar = computed(() => {
@@ -57,10 +59,23 @@ const isLoading = computed(() => {
   return userStore.isLoading || productsStore.isLoading
 })
 
+// 監聽用戶登入狀態變化
+watch(() => userStore.isLoggedIn, async (isLoggedIn) => {
+  if (isLoggedIn) {
+    // 用戶登入後，遷移本地購物車到後端並同步
+    await cartStore.migrateToBackend()
+  }
+}, { immediate: false })
+
 onMounted(async () => {
   // 初始化用戶資訊
   if (userStore.token) {
     await userStore.fetchUserInfo()
+    
+    // 如果已登入，同步購物車
+    if (userStore.isLoggedIn) {
+      await cartStore.migrateToBackend()
+    }
   }
   
   // 初始化產品分類

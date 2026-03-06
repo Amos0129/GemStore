@@ -305,6 +305,66 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 })
 
+// @desc    Get user orders
+// @route   GET /api/auth/orders
+// @access  Private
+router.get('/orders', authMiddleware, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status } = req.query
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+    
+    const where = { userId: req.user.id }
+    if (status) {
+      where.status = status.toUpperCase()
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                images: {
+                  where: { isMain: true },
+                  select: { url: true, alt: true }
+                }
+              }
+            }
+          }
+        },
+        shippingAddress: true
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: parseInt(limit)
+    })
+
+    const totalCount = await prisma.order.count({ where })
+
+    res.json({
+      success: true,
+      data: orders,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalCount,
+        totalPages: Math.ceil(totalCount / parseInt(limit))
+      }
+    })
+  } catch (error) {
+    console.error('Get user orders error:', error)
+    res.status(500).json({
+      success: false,
+      message: '獲取訂單失敗',
+      error: error.message
+    })
+  }
+})
+
 // @desc    Forgot password
 // @route   POST /api/auth/forgot
 // @access  Public

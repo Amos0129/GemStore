@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWishlistStore } from '@/store/wishlist'
 import { useCartStore } from '@/store/cart'
@@ -188,6 +188,11 @@ const clearAllWishlist = () => {
     wishlistStore.clearAll()
   }
 }
+
+onMounted(() => {
+  // 載入收藏清單
+  wishlistStore.fetchWishlist()
+})
 
 const addToCart = (item) => {
   if (item.stock === 0) return

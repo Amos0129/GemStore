@@ -20,12 +20,12 @@
             @keyup.enter="performSearch"
             type="text"
             placeholder="搜尋商品..."
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-300 focus:border-blue-300"
           />
         </div>
         <button
           @click="performSearch"
-          class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          class="bg-blue-800 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
         >
           搜尋
         </button>
@@ -53,7 +53,7 @@
       <div class="flex flex-wrap items-center gap-4 mb-6">
         <select
           v-model="sortBy"
-          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
         >
           <option value="relevance">相關性</option>
           <option value="price-low">價格：低到高</option>
@@ -64,7 +64,7 @@
 
         <select
           v-model="categoryFilter"
-          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
         >
           <option value="">所有分類</option>
           <option value="necklaces">項鍊</option>
@@ -75,7 +75,7 @@
 
         <select
           v-model="priceFilter"
-          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-300 focus:border-blue-300"
         >
           <option value="">所有價格</option>
           <option value="0-1000">NT$ 0 - 1,000</option>
@@ -88,7 +88,7 @@
         <button
           v-if="hasActiveFilters"
           @click="clearFilters"
-          class="text-sm text-purple-600 hover:text-purple-700 font-medium"
+          class="text-sm text-blue-800 hover:text-blue-600 font-medium"
         >
           清除篩選
         </button>
@@ -101,6 +101,8 @@
             v-for="product in paginatedResults"
             :key="product.id"
             :product="product"
+            :is-wishlisted="wishlistStore.isInWishlist(product.id)"
+            @toggle-wishlist="toggleWishlist"
           />
         </div>
 
@@ -122,8 +124,8 @@
               :class="[
                 'px-3 py-2 rounded-md text-sm font-medium',
                 page === currentPage
-                  ? 'bg-purple-600 text-white'
-                  : 'text-gray-700 hover:text-purple-600'
+                  ? 'bg-blue-800 text-white'
+                  : 'text-gray-700 hover:text-blue-800'
               ]"
             >
               {{ page }}
@@ -156,7 +158,7 @@
               v-for="suggestion in searchSuggestions"
               :key="suggestion"
               @click="searchFromSuggestion(suggestion)"
-              class="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+              class="text-sm bg-blue-50 text-blue-800 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
             >
               {{ suggestion }}
             </button>
@@ -165,7 +167,7 @@
 
         <router-link
           to="/products"
-          class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          class="inline-block bg-blue-800 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
         >
           瀏覽所有商品
         </router-link>
@@ -215,11 +217,13 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProductStore } from '@/store/products'
+import { useWishlistStore } from '@/store/wishlist'
 import ProductCard from '@/components/product/ProductCard.vue'
 
 const route = useRoute()
 const router = useRouter()
 const productStore = useProductStore()
+const wishlistStore = useWishlistStore()
 
 const searchInput = ref('')
 const searchQuery = ref('')
@@ -380,6 +384,14 @@ const clearFilters = () => {
 
 const clearRecentSearches = () => {
   recentSearches.value = []
+}
+
+const toggleWishlist = (product) => {
+  if (wishlistStore.isInWishlist(product.id)) {
+    wishlistStore.removeItem(product.id)
+  } else {
+    wishlistStore.addItem(product)
+  }
 }
 
 // Reset pagination when filters change

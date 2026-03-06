@@ -130,6 +130,20 @@
           </template>
         </el-table-column>
         <el-table-column prop="orderCount" label="訂單數" width="100" />
+        <el-table-column label="購物車" width="120">
+          <template #default="scope">
+            <el-tag 
+              v-if="scope.row.cartItems > 0"
+              type="warning" 
+              size="small"
+              class="cursor-pointer hover-tag"
+              @click="showCartDetail(scope.row)"
+            >
+              {{ scope.row.cartItems }} 件商品
+            </el-tag>
+            <span v-else class="text-gray-400">空的</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="狀態" width="100">
           <template #default="scope">
             <el-tag :type="scope.row.status === 'active' ? 'success' : 'danger'">
@@ -201,6 +215,56 @@
     <el-dialog v-model="showDetailDialog" title="會員詳情" width="800px">
       <MemberDetail :member="currentMember" />
     </el-dialog>
+
+    <!-- 購物車詳情對話框 -->
+    <el-dialog v-model="showCartDialog" title="購物車詳情" width="600px">
+      <div v-if="currentMember">
+        <div class="cart-dialog-header">
+          <h3>{{ currentMember.name }} 的購物車</h3>
+          <p>{{ currentMember.email }}</p>
+        </div>
+        
+        <el-table :data="cartItems" v-loading="cartLoading" stripe>
+          <el-table-column label="商品" min-width="200">
+            <template #default="{ row }">
+              <div class="product-info">
+                <img
+                  :src="row.product.image || '/placeholder.jpg'"
+                  :alt="row.product.name"
+                  class="product-image"
+                />
+                <div class="product-details">
+                  <div class="product-name">{{ row.product.name }}</div>
+                  <div class="product-category">{{ row.product.category }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="單價" align="center" width="120">
+            <template #default="{ row }">
+              NT$ {{ row.product.price?.toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column label="數量" align="center" width="80">
+            <template #default="{ row }">
+              {{ row.quantity }}
+            </template>
+          </el-table-column>
+          <el-table-column label="小計" align="center" width="120">
+            <template #default="{ row }">
+              NT$ {{ row.subtotal?.toLocaleString() }}
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>總計：</span>
+            <span class="total-amount">{{ cartTotalItems }} 件商品，NT$ {{ cartTotalAmount?.toLocaleString() }}</span>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -223,7 +287,12 @@ const total = ref(0)
 const showAddDialog = ref(false)
 const showEditDialog = ref(false)
 const showDetailDialog = ref(false)
+const showCartDialog = ref(false)
 const currentMember = ref(null)
+const cartItems = ref([])
+const cartLoading = ref(false)
+const cartTotalItems = ref(0)
+const cartTotalAmount = ref(0)
 
 // 統計數據
 const stats = ref({
@@ -367,7 +436,13 @@ const handleUpdate = (memberData) => {
 // 載入會員統計數據
 const loadMemberStats = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/admin/members/stats')
+    const token = localStorage.getItem('admin_token')
+    const response = await fetch('http://localhost:5000/api/admin/members/stats', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
     const data = await response.json()
     
     if (data.success) {
@@ -375,6 +450,44 @@ const loadMemberStats = async () => {
     }
   } catch (error) {
     console.error('載入會員統計失敗:', error)
+  }
+}
+
+// 顯示購物車詳情
+const showCartDetail = async (member) => {
+  try {
+    currentMember.value = member
+    cartLoading.value = true
+    showCartDialog.value = true
+    
+    console.log('Fetching cart for member:', member.id)
+    
+    const token = localStorage.getItem('admin_token')
+    const response = await fetch(`http://localhost:5000/api/admin/carts?userId=${member.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const data = await response.json()
+    console.log('Cart response:', data)
+    
+    if (data.success && data.data.carts.length > 0) {
+      const userCart = data.data.carts[0]
+      cartItems.value = userCart.items
+      cartTotalItems.value = userCart.totalItems
+      cartTotalAmount.value = userCart.totalAmount
+    } else {
+      cartItems.value = []
+      cartTotalItems.value = 0
+      cartTotalAmount.value = 0
+    }
+  } catch (error) {
+    console.error('獲取購物車詳情失敗:', error)
+    ElMessage.error('獲取購物車詳情失敗')
+  } finally {
+    cartLoading.value = false
   }
 }
 
@@ -396,7 +509,13 @@ const loadMembers = async () => {
       params.append('endDate', dateRange.value[1])
     }
 
-    const response = await fetch(`http://localhost:5000/api/admin/members?${params}`)
+    const token = localStorage.getItem('admin_token')
+    const response = await fetch(`http://localhost:5000/api/admin/members?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
     const data = await response.json()
     
     if (data.success) {
@@ -490,5 +609,84 @@ onMounted(async () => {
 .pagination {
   display: flex;
   justify-content: center;
+}
+
+/* 購物車相關樣式 */
+.hover-tag:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cart-dialog-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--el-border-color-light);
+}
+
+.cart-dialog-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.cart-dialog-header p {
+  margin: 0;
+  color: var(--el-text-color-regular);
+  font-size: 14px;
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.product-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--el-border-color-light);
+}
+
+.product-details {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.product-category {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.cart-summary {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--el-border-color-light);
+  text-align: right;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+}
+
+.total-amount {
+  font-weight: 600;
+  color: var(--el-color-primary);
 }
 </style>

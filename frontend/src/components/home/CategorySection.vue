@@ -21,55 +21,19 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useProductStore } from '@/store/products'
 
 const router = useRouter()
+const productStore = useProductStore()
 
-// 模擬商品分類數據，後續將從 API 獲取
-const categories = [
-  {
-    id: 1,
-    name: '水晶手鍊',
-    slug: 'bracelet',
-    description: '精美天然水晶手鍊',
-    icon: 'fas fa-gem'
-  },
-  {
-    id: 2,
-    name: '晶礦戒指',
-    slug: 'ring',
-    description: '獨特晶礦戒指設計',
-    icon: 'fas fa-ring'
-  },
-  {
-    id: 3,
-    name: '晶礦耳飾',
-    slug: 'earring',
-    description: '優雅晶礦耳環',
-    icon: 'fas fa-star'
-  },
-  {
-    id: 4,
-    name: '晶礦項鍊',
-    slug: 'necklace',
-    description: '時尚晶礦項鍊',
-    icon: 'fas fa-heart'
-  },
-  {
-    id: 5,
-    name: '原礦擺件',
-    slug: 'ornament',
-    description: '天然原礦擺設',
-    icon: 'fas fa-cube'
-  },
-  {
-    id: 6,
-    name: '淨化商品',
-    slug: 'purify',
-    description: '能量淨化用品',
-    icon: 'fas fa-spa'
-  }
-]
+const categories = ref([])
+
+onMounted(async () => {
+  await productStore.fetchCategories()
+  categories.value = productStore.categories
+})
 
 const navigateToCategory = (slug) => {
   router.push(`/category/${slug}`)
@@ -88,40 +52,42 @@ const navigateToCategory = (slug) => {
 
 .section-title {
   @apply text-4xl md:text-5xl font-bold text-center mb-16;
-  color: #8B5CF6;
+  color: #1B4F72;
 }
 
 .category-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6;
+  @apply flex flex-wrap justify-center gap-6;
 }
 
 .category-card {
   @apply card text-center cursor-pointer;
   transition: all 0.3s ease;
+  width: 200px;
+  flex-shrink: 0;
 }
 
 .category-card:hover {
   @apply transform -translate-y-3;
-  box-shadow: 0 8px 30px rgba(196, 181, 253, 0.3);
+  box-shadow: 0 8px 30px rgba(255, 182, 193, 0.3);
 }
 
 .category-icon {
   @apply text-5xl mb-4 transition-colors duration-300;
-  color: #C4B5FD;
+  color: #93C5FD;
 }
 
 .category-card:hover .category-icon {
-  color: #8B5CF6;
+  color: #60A5FA;
 }
 
 .category-name {
   @apply text-xl font-semibold mb-2;
-  color: #6B21A8;
+  color: #1B4F72;
 }
 
 .category-description {
   @apply text-sm;
-  color: #A78BFA;
+  color: #1B4F72;
 }
 
 /* Mobile adjustments */
@@ -139,11 +105,12 @@ const navigateToCategory = (slug) => {
   }
   
   .category-grid {
-    @apply grid-cols-2 gap-3;
+    @apply gap-3;
   }
   
   .category-card {
     @apply p-4;
+    width: 150px;
   }
   
   .category-icon {
@@ -174,6 +141,7 @@ const navigateToCategory = (slug) => {
   
   .category-card {
     @apply p-3;
+    width: 140px;
   }
   
   .category-icon {

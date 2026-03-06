@@ -103,14 +103,22 @@ const totalWithShipping = computed(() => {
   return cartStore.totalPrice + shippingCost.value
 })
 
-const handleUpdateQuantity = (productId, quantity) => {
-  cartStore.updateQuantity(productId, quantity)
+const handleUpdateQuantity = async (productId, quantity) => {
+  try {
+    await cartStore.updateQuantity(productId, quantity)
+  } catch (error) {
+    showToast('更新數量失敗', 'error')
+  }
 }
 
-const handleRemoveItem = (productId) => {
-  const item = cartStore.items.find(item => item.id === productId)
-  cartStore.removeItem(productId)
-  showToast(`${item.name} 已從購物車移除`, 'info')
+const handleRemoveItem = async (productId) => {
+  try {
+    const item = cartStore.items.find(item => item.id === productId)
+    await cartStore.removeItem(productId)
+    showToast(`${item.name} 已從購物車移除`, 'info')
+  } catch (error) {
+    showToast('移除商品失敗', 'error')
+  }
 }
 </script>
 
@@ -124,8 +132,9 @@ const handleRemoveItem = (productId) => {
 }
 
 .cart-sidebar {
-  @apply fixed right-0 top-0 h-full w-full max-w-md bg-white border-l border-purple-200 flex flex-col transform translate-x-full transition-transform duration-300;
-  box-shadow: -4px 0 20px rgba(139, 92, 246, 0.1);
+  @apply fixed right-0 top-0 h-full w-full max-w-md bg-white border-l flex flex-col transform translate-x-full transition-transform duration-300;
+  border-left-color: rgba(173, 216, 230, 0.3);
+  box-shadow: -4px 0 20px rgba(173, 216, 230, 0.1);
 }
 
 .cart-sidebar.active {
@@ -133,22 +142,23 @@ const handleRemoveItem = (productId) => {
 }
 
 .cart-header {
-  @apply flex items-center justify-between p-6 border-b border-purple-200;
-  background-color: #F8F7FF;
+  @apply flex items-center justify-between p-6 border-b;
+  border-bottom-color: rgba(173, 216, 230, 0.3);
+  background-color: #F0F8FF;
 }
 
 .cart-title {
   @apply text-xl font-bold;
-  color: #8B5CF6;
+  color: #2E86AB;
 }
 
 .close-cart {
   @apply bg-none border-none text-xl cursor-pointer p-2 transition-colors duration-300;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .close-cart:hover {
-  color: #F8BBD9;
+  color: #1B4F72;
 }
 
 .cart-items {
@@ -161,22 +171,22 @@ const handleRemoveItem = (productId) => {
 
 .empty-cart i {
   @apply text-6xl mb-4;
-  color: #C4B5FD;
+  color: #2E86AB;
 }
 
 .empty-cart p {
   @apply text-lg mb-6;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .continue-shopping {
   @apply px-6 py-3 rounded-lg font-semibold transition-colors inline-block;
-  background-color: #C4B5FD;
-  color: #581C87;
+  background-color: #1B4F72;
+  color: white;
 }
 
 .continue-shopping:hover {
-  background-color: #8B5CF6;
+  background-color: #2E86AB;
   color: white;
 }
 
@@ -185,8 +195,9 @@ const handleRemoveItem = (productId) => {
 }
 
 .cart-footer {
-  @apply border-t border-purple-200 p-6 space-y-4;
-  background-color: #FEFEFF;
+  @apply border-t p-6 space-y-4;
+  border-top-color: rgba(173, 216, 230, 0.3);
+  background-color: #F0F8FF;
 }
 
 .cart-summary {
@@ -195,12 +206,13 @@ const handleRemoveItem = (productId) => {
 
 .summary-row {
   @apply flex justify-between;
-  color: #6B21A8;
+  color: #2E86AB;
 }
 
 .summary-row.total {
-  @apply text-lg font-bold border-t border-purple-200 pt-3;
-  color: #8B5CF6;
+  @apply text-lg font-bold border-t pt-3;
+  border-top-color: rgba(173, 216, 230, 0.3);
+  color: #1B4F72;
 }
 
 .cart-actions {
@@ -209,35 +221,35 @@ const handleRemoveItem = (productId) => {
 
 .view-cart-btn {
   @apply block w-full px-6 py-3 rounded-lg font-semibold transition-colors text-center;
-  border: 1px solid #C4B5FD;
-  color: #8B5CF6;
+  border: 1px solid #ADD8E6;
+  color: #2E86AB;
   background-color: transparent;
 }
 
 .view-cart-btn:hover {
-  background-color: rgba(196, 181, 253, 0.1);
-  color: #6B21A8;
+  background-color: rgba(173, 216, 230, 0.1);
+  color: #1B4F72;
 }
 
 .checkout-btn {
   @apply block w-full px-6 py-3 rounded-lg font-semibold transition-colors text-center;
-  background-color: #C4B5FD;
-  color: #581C87;
+  background-color: #1B4F72;
+  color: white;
 }
 
 .checkout-btn:hover {
-  background-color: #8B5CF6;
+  background-color: #2E86AB;
   color: white;
 }
 
 .shipping-notice {
   @apply flex items-center space-x-2 text-sm p-3 rounded-lg;
-  color: #6B21A8;
-  background-color: rgba(196, 181, 253, 0.15);
+  color: #2E86AB;
+  background-color: rgba(173, 216, 230, 0.15);
 }
 
 .shipping-notice i {
-  color: #C4B5FD;
+  color: #2E86AB;
 }
 
 /* Mobile adjustments */

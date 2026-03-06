@@ -30,21 +30,16 @@ import { useToast } from '@/composables/useToast'
 const { toasts, removeToast } = useToast()
 
 const toastClass = (type) => {
-  const classes = {
-    'success': 'border-green-500 bg-green-500/10',
-    'error': 'border-red-500 bg-red-500/10',
-    'warning': 'border-yellow-500 bg-yellow-500/10',
-    'info': 'border-blue-500 bg-blue-500/10'
-  }
-  return classes[type] || classes.info
+  // 使用統一的馬卡龍藍風格
+  return 'toast-macaron-blue'
 }
 
 const toastIcon = (type) => {
   const icons = {
-    'success': 'fas fa-check-circle text-green-500',
-    'error': 'fas fa-exclamation-circle text-red-500',
-    'warning': 'fas fa-exclamation-triangle text-yellow-500',
-    'info': 'fas fa-info-circle text-blue-500'
+    'success': 'fas fa-check-circle',
+    'error': 'fas fa-exclamation-circle text-red-400',
+    'warning': 'fas fa-exclamation-triangle text-yellow-400',
+    'info': 'fas fa-info-circle'
   }
   return icons[type] || icons.info
 }
@@ -56,11 +51,15 @@ const toastIcon = (type) => {
 }
 
 .toast {
-  @apply flex items-start space-x-3 p-4 rounded-lg border backdrop-blur-sm shadow-lg;
+  @apply flex items-start space-x-3 p-5 rounded-xl border-2 backdrop-blur-sm;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 25px rgba(96, 165, 250, 0.3);
+  border-color: #60A5FA;
 }
 
 .toast-icon {
   @apply flex-shrink-0 text-xl;
+  color: #60A5FA;
 }
 
 .toast-content {
@@ -68,11 +67,17 @@ const toastIcon = (type) => {
 }
 
 .toast-message {
-  @apply text-white font-medium;
+  @apply font-semibold text-lg;
+  color: #1E3A8A;
 }
 
 .toast-close {
-  @apply flex-shrink-0 text-gray-400 hover:text-white transition-colors duration-300 ml-2;
+  @apply flex-shrink-0 transition-colors duration-300 ml-2;
+  color: #94A3B8;
+}
+
+.toast-close:hover {
+  color: #60A5FA;
 }
 
 /* Transitions */

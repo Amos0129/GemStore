@@ -1,5 +1,6 @@
 <template>
   <div class="finance-view">
+    <!-- 緊湊頭部 -->
     <div class="view-header">
       <h1>財務報表</h1>
       <div class="header-actions">
@@ -9,171 +10,165 @@
           range-separator="至"
           start-placeholder="開始日期"
           end-placeholder="結束日期"
-          format="YYYY/MM/DD"
+          format="MM/DD"
           value-format="YYYY-MM-DD"
+          size="small"
           @change="updateData"
         />
-        <el-button type="primary" @click="exportReport">
+        <el-button type="primary" size="small" @click="exportReport">
           <el-icon><Download /></el-icon>
-          匯出報表
+          匯出
         </el-button>
       </div>
     </div>
 
-    <!-- 關鍵指標卡片 -->
-    <div class="stats-overview">
-      <div class="stats-grid">
-        <el-card class="stat-card revenue">
-          <div class="stat-content">
+    <!-- 全部內容在一個大容器內 -->
+    <div class="dashboard-content">
+      <!-- 頂部統計卡片 -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-info">
             <div class="stat-value">${{ stats.totalRevenue.toLocaleString() }}</div>
             <div class="stat-label">總收入</div>
-            <div class="stat-change" :class="{ positive: stats.revenueChange > 0 }">
-              <el-icon><TrendCharts /></el-icon>
-              {{ stats.revenueChange > 0 ? '+' : '' }}{{ stats.revenueChange }}%
-            </div>
           </div>
-          <el-icon class="stat-icon"><Money /></el-icon>
-        </el-card>
-        <el-card class="stat-card orders">
-          <div class="stat-content">
+          <div class="stat-icon revenue-bg">
+            <el-icon><Money /></el-icon>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
             <div class="stat-value">{{ stats.totalOrders }}</div>
-            <div class="stat-label">總訂單數</div>
-            <div class="stat-change" :class="{ positive: stats.ordersChange > 0 }">
-              <el-icon><TrendCharts /></el-icon>
-              {{ stats.ordersChange > 0 ? '+' : '' }}{{ stats.ordersChange }}%
-            </div>
+            <div class="stat-label">訂單數</div>
           </div>
-          <el-icon class="stat-icon"><Document /></el-icon>
-        </el-card>
-        <el-card class="stat-card avg-order">
-          <div class="stat-content">
+          <div class="stat-icon orders-bg">
+            <el-icon><Document /></el-icon>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
             <div class="stat-value">${{ stats.avgOrderValue }}</div>
-            <div class="stat-label">平均訂單金額</div>
-            <div class="stat-change" :class="{ positive: stats.avgChange > 0 }">
-              <el-icon><TrendCharts /></el-icon>
-              {{ stats.avgChange > 0 ? '+' : '' }}{{ stats.avgChange }}%
-            </div>
+            <div class="stat-label">平均金額</div>
           </div>
-          <el-icon class="stat-icon"><PieChart /></el-icon>
-        </el-card>
-        <el-card class="stat-card profit">
-          <div class="stat-content">
+          <div class="stat-icon avg-bg">
+            <el-icon><PieChart /></el-icon>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
             <div class="stat-value">${{ stats.netProfit.toLocaleString() }}</div>
             <div class="stat-label">淨利潤</div>
-            <div class="stat-change" :class="{ positive: stats.profitChange > 0 }">
-              <el-icon><TrendCharts /></el-icon>
-              {{ stats.profitChange > 0 ? '+' : '' }}{{ stats.profitChange }}%
-            </div>
           </div>
-          <el-icon class="stat-icon"><Trophy /></el-icon>
-        </el-card>
+          <div class="stat-icon profit-bg">
+            <el-icon><Trophy /></el-icon>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- 圖表區域 -->
-    <div class="charts-section">
-      <el-row :gutter="20">
-        <el-col :span="16">
-          <el-card>
-            <template #header>
-              <div class="card-header">
-                <span>收入趨勢</span>
-                <el-radio-group v-model="revenueChartType" size="small">
-                  <el-radio-button label="daily">日</el-radio-button>
-                  <el-radio-button label="weekly">週</el-radio-button>
-                  <el-radio-button label="monthly">月</el-radio-button>
-                </el-radio-group>
-              </div>
-            </template>
-            <div ref="revenueChart" style="height: 400px;"></div>
-          </el-card>
-        </el-col>
-        <el-col :span="8">
-          <el-card>
-            <template #header>
-              <span>銷售分佈</span>
-            </template>
-            <div ref="pieChart" style="height: 400px;"></div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 詳細報表 -->
-    <div class="detailed-reports">
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-card>
-            <template #header>
-              <span>熱銷商品</span>
-            </template>
-            <el-table :data="topProducts" style="width: 100%">
-              <el-table-column prop="name" label="商品名稱" min-width="120" />
-              <el-table-column prop="sales" label="銷量" width="80" />
-              <el-table-column prop="revenue" label="收入" width="100">
-                <template #default="scope">
-                  ${{ scope.row.revenue.toLocaleString() }}
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-card>
-        </el-col>
-        <el-col :span="12">
-          <el-card>
-            <template #header>
-              <span>月度對比</span>
-            </template>
-            <el-table :data="monthlyComparison" style="width: 100%">
-              <el-table-column prop="month" label="月份" width="80" />
-              <el-table-column prop="revenue" label="收入" width="120">
-                <template #default="scope">
-                  ${{ scope.row.revenue.toLocaleString() }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="orders" label="訂單數" width="80" />
-              <el-table-column prop="growth" label="成長率" width="100">
-                <template #default="scope">
-                  <span :class="{ 'text-success': scope.row.growth > 0, 'text-danger': scope.row.growth < 0 }">
-                    {{ scope.row.growth > 0 ? '+' : '' }}{{ scope.row.growth }}%
-                  </span>
-                </template>
-              </el-table-column>
-            </el-table>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 支出分析 -->
-    <div class="expense-analysis">
-      <el-card>
-        <template #header>
-          <span>支出分析</span>
-        </template>
+      <!-- 圖表區域 -->
+      <div class="charts-section">
         <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="expense-item">
-              <div class="expense-label">商品成本</div>
-              <div class="expense-value">${{ expenses.productCost.toLocaleString() }}</div>
-              <div class="expense-percentage">{{ expenses.productCostPercentage }}%</div>
-            </div>
+          <el-col :span="16">
+            <el-card>
+              <template #header>
+                <div class="card-header">
+                  <span>收入趨勢</span>
+                  <el-radio-group v-model="revenueChartType" size="small">
+                    <el-radio-button label="daily">日</el-radio-button>
+                    <el-radio-button label="weekly">週</el-radio-button>
+                    <el-radio-button label="monthly">月</el-radio-button>
+                  </el-radio-group>
+                </div>
+              </template>
+              <div ref="revenueChart" style="height: 220px;"></div>
+            </el-card>
           </el-col>
           <el-col :span="8">
-            <div class="expense-item">
-              <div class="expense-label">運營成本</div>
-              <div class="expense-value">${{ expenses.operatingCost.toLocaleString() }}</div>
-              <div class="expense-percentage">{{ expenses.operatingCostPercentage }}%</div>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <div class="expense-item">
-              <div class="expense-label">行銷費用</div>
-              <div class="expense-value">${{ expenses.marketingCost.toLocaleString() }}</div>
-              <div class="expense-percentage">{{ expenses.marketingCostPercentage }}%</div>
-            </div>
+            <el-card>
+              <template #header>
+                <span>銷售分佈</span>
+              </template>
+              <div ref="pieChart" style="height: 220px;"></div>
+            </el-card>
           </el-col>
         </el-row>
-      </el-card>
+      </div>
+
+      <!-- 詳細報表 -->
+      <div class="detailed-reports">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-card>
+              <template #header>
+                <span>熱銷商品</span>
+              </template>
+              <el-table :data="topProducts" style="width: 100%">
+                <el-table-column prop="name" label="商品名稱" min-width="120" />
+                <el-table-column prop="sales" label="銷量" width="80" />
+                <el-table-column prop="revenue" label="收入" width="100">
+                  <template #default="scope">
+                    ${{ (scope.row.revenue || 0).toLocaleString() }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </el-col>
+          <el-col :span="12">
+            <el-card>
+              <template #header>
+                <span>月度對比</span>
+              </template>
+              <el-table :data="monthlyComparison" style="width: 100%">
+                <el-table-column prop="month" label="月份" width="80" />
+                <el-table-column prop="revenue" label="收入" width="120">
+                  <template #default="scope">
+                    ${{ (scope.row.revenue || 0).toLocaleString() }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="orders" label="訂單數" width="80" />
+                <el-table-column prop="growth" label="成長率" width="100">
+                  <template #default="scope">
+                    <span :class="{ 'text-success': scope.row.growth > 0, 'text-danger': scope.row.growth < 0 }">
+                      {{ scope.row.growth > 0 ? '+' : '' }}{{ scope.row.growth || 0 }}%
+                    </span>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- 支出分析 -->
+      <div class="expense-analysis">
+        <el-card>
+          <template #header>
+            <span>支出分析</span>
+          </template>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <div class="expense-item">
+                <div class="expense-label">商品成本</div>
+                <div class="expense-value">${{ expenses.productCost.toLocaleString() }}</div>
+                <div class="expense-percentage">{{ expenses.productCostPercentage }}%</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="expense-item">
+                <div class="expense-label">運營成本</div>
+                <div class="expense-value">${{ expenses.operatingCost.toLocaleString() }}</div>
+                <div class="expense-percentage">{{ expenses.operatingCostPercentage }}%</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="expense-item">
+                <div class="expense-label">行銷費用</div>
+                <div class="expense-value">${{ expenses.marketingCost.toLocaleString() }}</div>
+                <div class="expense-percentage">{{ expenses.marketingCostPercentage }}%</div>
+              </div>
+            </el-col>
+          </el-row>
+        </el-card>
+      </div>
     </div>
   </div>
 </template>
@@ -432,155 +427,138 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 主容器 - 固定視窗高度 */
 .finance-view {
-  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 8px;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+/* 緊湊頭部 */
 .view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  height: 40px;
 }
 
 .view-header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--el-text-color-primary);
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
-.stats-overview {
-  margin-bottom: 24px;
-}
-
-.stats-overview .el-row {
-  display: flex;
-  align-items: stretch;
-}
-
-.stats-overview .el-col {
-  display: flex;
-}
-
-.stat-card {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 140px;
-  display: flex;
-  align-items: center;
-}
-
-.stat-card.revenue {
-  border-left: 4px solid #67C23A;
-}
-
-.stat-card.orders {
-  border-left: 4px solid #409EFF;
-}
-
-.stat-card.avg-order {
-  border-left: 4px solid #E6A23C;
-}
-
-.stat-card.profit {
-  border-left: 4px solid #F56C6C;
-}
-
-.stat-content {
-  z-index: 2;
-  position: relative;
+/* 儀表板內容容器 */
+.dashboard-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* 頂部統計卡片 - 橫向一排 */
+.stats-section {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  height: 80px;
+}
+
+.stat-card {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
   padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--el-border-color-light);
+  position: relative;
+  overflow: hidden;
+}
+
+
+.stat-info {
+  flex: 1;
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--el-text-color-primary);
-  margin-bottom: 6px;
-  line-height: 1.2;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
+  margin-bottom: 4px;
+  line-height: 1;
 }
 
 .stat-label {
+  font-size: 12px;
   color: var(--el-text-color-regular);
-  font-size: 14px;
-  margin-bottom: 8px;
   font-weight: 500;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.stat-change {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--el-color-danger);
-  min-height: 18px;
-}
-
-.stat-change.positive {
-  color: var(--el-color-success);
 }
 
 .stat-icon {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 48px;
-  color: var(--el-color-primary);
-  opacity: 0.1;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
 }
 
+.revenue-bg { background: linear-gradient(135deg, #67C23A, #85CE61); }
+.orders-bg { background: linear-gradient(135deg, #409EFF, #79BBFF); }
+.avg-bg { background: linear-gradient(135deg, #E6A23C, #EEBE77); }
+.profit-bg { background: linear-gradient(135deg, #F56C6C, #F89898); }
+
 .charts-section {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .detailed-reports {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .expense-analysis {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .expense-item {
   text-align: center;
-  padding: 20px;
+  padding: 12px;
 }
 
 .expense-label {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--el-text-color-regular);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .expense-value {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--el-text-color-primary);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .expense-percentage {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--el-color-primary);
 }
 
@@ -596,5 +574,41 @@ onMounted(async () => {
 
 .text-danger {
   color: var(--el-color-danger);
+}
+
+/* 讓表格更緊湊 */
+.finance-view :deep(.el-table) {
+  font-size: 12px;
+}
+
+.finance-view :deep(.el-table .el-table__cell) {
+  padding: 8px 0;
+}
+
+.finance-view :deep(.el-card__header) {
+  padding: 12px 16px;
+}
+
+.finance-view :deep(.el-card__body) {
+  padding: 12px 16px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .stats-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    height: auto;
+  }
+  
+  .stat-card {
+    margin-bottom: 8px;
+  }
+  
+  .finance-view {
+    height: auto;
+    overflow: auto;
+  }
 }
 </style>

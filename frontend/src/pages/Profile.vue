@@ -1,17 +1,21 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Sidebar -->
-        <div class="lg:col-span-1">
-          <div class="bg-white rounded-lg shadow-sm border p-6 sticky top-6">
+  <div class="min-h-screen" style="background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);">
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+          <!-- Sidebar -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-md border-0 p-5 sticky top-6" style="box-shadow: 0 4px 15px rgba(96, 165, 250, 0.12);">
             <!-- User Info -->
             <div class="text-center mb-6">
-              <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="text-xl font-semibold text-purple-600">{{ userInitial }}</span>
+              <div class="relative inline-block">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md" style="background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.08) 100%);">
+                  <span class="text-xl font-bold" style="color: #60A5FA;">{{ userInitial }}</span>
+                </div>
+                <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm" style="background-color: #22C55E;"></div>
               </div>
-              <h2 class="text-lg font-semibold text-gray-900">{{ user.name }}</h2>
-              <p class="text-sm text-gray-600">{{ user.email }}</p>
+              <h2 class="text-lg font-bold mb-1" style="color: #1E3A8A;">{{ user.firstName }} {{ user.lastName }}</h2>
+              <p class="text-xs" style="color: #6B7280;">{{ user.email }}</p>
             </div>
 
             <!-- Navigation -->
@@ -21,24 +25,25 @@
                 :key="tab.id"
                 @click="activeTab = tab.id"
                 :class="[
-                  'w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                  'w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all',
                   activeTab === tab.id
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-white shadow-md'
+                    : 'hover:bg-blue-50 hover:text-blue-600'
                 ]"
+                :style="activeTab === tab.id ? { background: 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)', color: 'white' } : { color: '#6B7280' }"
               >
-                <component :is="tab.icon" class="mr-3 h-5 w-5" />
+                <component :is="tab.icon" class="mr-2.5 h-4 w-4" />
                 {{ tab.name }}
               </button>
             </nav>
 
             <!-- Logout -->
-            <div class="mt-6 pt-6 border-t">
+            <div class="mt-6 pt-4" style="border-top: 1px solid #F3F4F6;">
               <button
                 @click="handleLogout"
-                class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                class="w-full flex items-center px-3 py-2.5 text-sm font-medium text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all"
               >
-                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="mr-2.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                 </svg>
                 登出
@@ -62,47 +67,72 @@
           <ProfileAddress v-else-if="activeTab === 'address'" />
           
           <!-- Account Settings Tab -->
-          <div v-else-if="activeTab === 'settings'" class="bg-white rounded-lg shadow-sm border p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">帳戶設定</h2>
+          <div v-else-if="activeTab === 'settings'" class="bg-white rounded-xl shadow-md border-0 p-6" style="box-shadow: 0 4px 15px rgba(96, 165, 250, 0.12);">
+            <div class="flex items-center mb-6">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3" style="background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.08) 100%);">
+                <svg class="w-4 h-4" style="color: #60A5FA;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </div>
+              <h2 class="text-xl font-bold" style="color: #1E3A8A;">帳戶設定</h2>
+            </div>
             
             <div class="space-y-6">
               <!-- Password Change -->
-              <div class="border-b pb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">變更密碼</h3>
+              <div class="bg-gray-50 rounded-lg p-5" style="border: 1px solid rgba(96, 165, 250, 0.08);">
+                <div class="flex items-center mb-5">
+                  <div class="w-6 h-6 rounded-md flex items-center justify-center mr-2.5" style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-base font-semibold" style="color: #1E3A8A;">變更密碼</h3>
+                </div>
                 <form @submit.prevent="changePassword" class="space-y-4">
                   <div>
-                    <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">目前密碼</label>
+                    <label for="currentPassword" class="block text-xs font-medium mb-1.5" style="color: #374151;">目前密碼</label>
                     <input
                       id="currentPassword"
                       v-model="passwordForm.currentPassword"
                       type="password"
                       required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                      class="w-full px-3 py-2.5 border rounded-lg transition-all focus:outline-none text-sm"
+                      style="border-color: rgba(96, 165, 250, 0.3); background-color: #ffffff;"
+                      onfocus="this.style.borderColor='#60A5FA'; this.style.boxShadow='0 0 0 2px rgba(96, 165, 250, 0.08)'"
+                      onblur="this.style.borderColor='rgba(96, 165, 250, 0.3)'; this.style.boxShadow='none'"
                     />
                   </div>
                   <div>
-                    <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">新密碼</label>
+                    <label for="newPassword" class="block text-xs font-medium mb-1.5" style="color: #374151;">新密碼</label>
                     <input
                       id="newPassword"
                       v-model="passwordForm.newPassword"
                       type="password"
                       required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                      class="w-full px-3 py-2.5 border rounded-lg transition-all focus:outline-none text-sm"
+                      style="border-color: rgba(96, 165, 250, 0.3); background-color: #ffffff;"
+                      onfocus="this.style.borderColor='#60A5FA'; this.style.boxShadow='0 0 0 2px rgba(96, 165, 250, 0.08)'"
+                      onblur="this.style.borderColor='rgba(96, 165, 250, 0.3)'; this.style.boxShadow='none'"
                     />
                   </div>
                   <div>
-                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">確認新密碼</label>
+                    <label for="confirmPassword" class="block text-xs font-medium mb-1.5" style="color: #374151;">確認新密碼</label>
                     <input
                       id="confirmPassword"
                       v-model="passwordForm.confirmPassword"
                       type="password"
                       required
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                      class="w-full px-3 py-2.5 border rounded-lg transition-all focus:outline-none text-sm"
+                      style="border-color: rgba(96, 165, 250, 0.3); background-color: #ffffff;"
+                      onfocus="this.style.borderColor='#60A5FA'; this.style.boxShadow='0 0 0 2px rgba(96, 165, 250, 0.08)'"
+                      onblur="this.style.borderColor='rgba(96, 165, 250, 0.3)'; this.style.boxShadow='none'"
                     />
                   </div>
                   <button
                     type="submit"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+                    class="px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all"
+                    style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);"
                   >
                     變更密碼
                   </button>
@@ -110,64 +140,111 @@
               </div>
 
               <!-- Notification Settings -->
-              <div class="border-b pb-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">通知設定</h3>
-                <div class="space-y-4">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-900">電子郵件通知</h4>
-                      <p class="text-sm text-gray-600">接收訂單更新和促銷資訊</p>
-                    </div>
-                    <input
-                      v-model="notificationSettings.email"
-                      type="checkbox"
-                      class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
+              <div class="bg-gray-50 rounded-lg p-5" style="border: 1px solid rgba(96, 165, 250, 0.08);">
+                <div class="flex items-center mb-5">
+                  <div class="w-6 h-6 rounded-md flex items-center justify-center mr-2.5" style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM12 2C8.69 2 6 4.69 6 8c0 5.25 0 8.14-1.41 9.55A1 1 0 006 19h12a1 1 0 001.41-1.45C18 16.14 18 13.25 18 8c0-3.31-2.69-6-6-6z"></path>
+                    </svg>
                   </div>
-                  <div class="flex items-center justify-between">
+                  <h3 class="text-base font-semibold" style="color: #1E3A8A;">通知設定</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between bg-white rounded-lg p-3" style="border: 1px solid rgba(96, 165, 250, 0.08);">
                     <div>
-                      <h4 class="text-sm font-medium text-gray-900">簡訊通知</h4>
-                      <p class="text-sm text-gray-600">接收配送和重要通知</p>
+                      <h4 class="text-sm font-semibold mb-1" style="color: #1E3A8A;">電子郵件通知</h4>
+                      <p class="text-xs" style="color: #6B7280;">接收訂單更新和促銷資訊</p>
                     </div>
-                    <input
-                      v-model="notificationSettings.sms"
-                      type="checkbox"
-                      class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
+                    <div class="relative inline-block w-10 h-5">
+                      <input
+                        v-model="notificationSettings.email"
+                        type="checkbox"
+                        class="sr-only peer"
+                      />
+                      <div class="w-10 h-5 rounded-full transition-colors peer-checked:bg-blue-500" style="background-color: #E5E7EB; cursor: pointer;"
+                           @click="notificationSettings.email = !notificationSettings.email">
+                        <div class="w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform peer-checked:translate-x-5" 
+                             :style="notificationSettings.email ? 'transform: translateX(20px); background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);' : 'transform: translateX(2px);'"
+                             style="margin: 4px;"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between bg-white rounded-lg p-3" style="border: 1px solid rgba(96, 165, 250, 0.08);">
+                    <div>
+                      <h4 class="text-sm font-semibold mb-1" style="color: #1E3A8A;">簡訊通知</h4>
+                      <p class="text-xs" style="color: #6B7280;">接收配送和重要通知</p>
+                    </div>
+                    <div class="relative inline-block w-10 h-5">
+                      <input
+                        v-model="notificationSettings.sms"
+                        type="checkbox"
+                        class="sr-only peer"
+                      />
+                      <div class="w-10 h-5 rounded-full transition-colors peer-checked:bg-blue-500" style="background-color: #E5E7EB; cursor: pointer;"
+                           @click="notificationSettings.sms = !notificationSettings.sms">
+                        <div class="w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform peer-checked:translate-x-5" 
+                             :style="notificationSettings.sms ? 'transform: translateX(20px); background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);' : 'transform: translateX(2px);'"
+                             style="margin: 4px;"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- Privacy Settings -->
-              <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">隱私設定</h3>
-                <div class="space-y-4">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-900">個人資料公開</h4>
-                      <p class="text-sm text-gray-600">允許其他用戶查看您的個人資料</p>
-                    </div>
-                    <input
-                      v-model="privacySettings.profilePublic"
-                      type="checkbox"
-                      class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
+              <div class="bg-gray-50 rounded-lg p-5" style="border: 1px solid rgba(96, 165, 250, 0.08);">
+                <div class="flex items-center mb-5">
+                  <div class="w-6 h-6 rounded-md flex items-center justify-center mr-2.5" style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
                   </div>
-                  <div class="flex items-center justify-between">
+                  <h3 class="text-base font-semibold" style="color: #1E3A8A;">隱私設定</h3>
+                </div>
+                <div class="space-y-4">
+                  <div class="flex items-center justify-between bg-white rounded-lg p-3" style="border: 1px solid rgba(96, 165, 250, 0.08);">
                     <div>
-                      <h4 class="text-sm font-medium text-gray-900">購買記錄分析</h4>
-                      <p class="text-sm text-gray-600">允許我們分析您的購買記錄以提供更好的推薦</p>
+                      <h4 class="text-sm font-semibold mb-1" style="color: #1E3A8A;">個人資料公開</h4>
+                      <p class="text-xs" style="color: #6B7280;">允許其他用戶查看您的個人資料</p>
                     </div>
-                    <input
-                      v-model="privacySettings.purchaseAnalytics"
-                      type="checkbox"
-                      class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
+                    <div class="relative inline-block w-10 h-5">
+                      <input
+                        v-model="privacySettings.profilePublic"
+                        type="checkbox"
+                        class="sr-only peer"
+                      />
+                      <div class="w-10 h-5 rounded-full transition-colors peer-checked:bg-blue-500" style="background-color: #E5E7EB; cursor: pointer;"
+                           @click="privacySettings.profilePublic = !privacySettings.profilePublic">
+                        <div class="w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform peer-checked:translate-x-5" 
+                             :style="privacySettings.profilePublic ? 'transform: translateX(20px); background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);' : 'transform: translateX(2px);'"
+                             style="margin: 4px;"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between bg-white rounded-lg p-3" style="border: 1px solid rgba(96, 165, 250, 0.08);">
+                    <div>
+                      <h4 class="text-sm font-semibold mb-1" style="color: #1E3A8A;">購買記錄分析</h4>
+                      <p class="text-xs" style="color: #6B7280;">允許我們分析您的購買記錄以提供更好的推薦</p>
+                    </div>
+                    <div class="relative inline-block w-10 h-5">
+                      <input
+                        v-model="privacySettings.purchaseAnalytics"
+                        type="checkbox"
+                        class="sr-only peer"
+                      />
+                      <div class="w-10 h-5 rounded-full transition-colors peer-checked:bg-blue-500" style="background-color: #E5E7EB; cursor: pointer;"
+                           @click="privacySettings.purchaseAnalytics = !privacySettings.purchaseAnalytics">
+                        <div class="w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform peer-checked:translate-x-5" 
+                             :style="privacySettings.purchaseAnalytics ? 'transform: translateX(20px); background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);' : 'transform: translateX(2px);'"
+                             style="margin: 4px;"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -188,10 +265,7 @@ const userStore = useUserStore()
 
 const activeTab = ref('info')
 
-const user = reactive({
-  name: '王小美',
-  email: 'user@example.com'
-})
+const user = computed(() => userStore.userInfo)
 
 const passwordForm = reactive({
   currentPassword: '',
@@ -210,7 +284,7 @@ const privacySettings = reactive({
 })
 
 const userInitial = computed(() => {
-  return user.name ? user.name.charAt(0).toUpperCase() : 'U'
+  return user.value?.firstName ? user.value.firstName.charAt(0).toUpperCase() : 'U'
 })
 
 const tabs = [
@@ -248,15 +322,22 @@ const changePassword = async () => {
   }
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    alert('密碼變更成功')
-    
-    // Reset form
-    Object.keys(passwordForm).forEach(key => {
-      passwordForm[key] = ''
+    const result = await userStore.changePassword({
+      currentPassword: passwordForm.currentPassword,
+      password: passwordForm.newPassword,
+      confirmPassword: passwordForm.confirmPassword
     })
+    
+    if (result.success) {
+      alert('密碼變更成功')
+      
+      // Reset form
+      Object.keys(passwordForm).forEach(key => {
+        passwordForm[key] = ''
+      })
+    } else {
+      alert(result.error || '密碼變更失敗')
+    }
   } catch (error) {
     console.error('Change password failed:', error)
     alert('密碼變更失敗，請稍後再試')

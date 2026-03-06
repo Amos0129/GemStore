@@ -61,7 +61,7 @@ export const useProductStore = defineStore('products', () => {
   })
 
   const featuredProducts = computed(() => 
-    products.value.filter(p => p.featured).slice(0, 4)
+    products.value.filter(p => p.isFeatured).slice(0, 4)
   )
 
   const newProducts = computed(() =>
@@ -71,7 +71,7 @@ export const useProductStore = defineStore('products', () => {
   )
 
   const saleProducts = computed(() =>
-    products.value.filter(p => p.originalPrice > p.price).slice(0, 8)
+    products.value.filter(p => p.originalPrice && p.originalPrice > p.price).slice(0, 8)
   )
 
   // 取得所有商品
@@ -80,9 +80,25 @@ export const useProductStore = defineStore('products', () => {
       isLoading.value = true
       error.value = null
       
-      const response = await api.get('/products')
-      // API 響應格式可能是 {success: true, data: [...]}
-      products.value = response.data?.data || response.data || []
+      const response = await api.get('/products?limit=50')
+      
+      if (response.data?.success && response.data?.data) {
+        // 處理數據格式
+        products.value = response.data.data.map(product => ({
+          ...product,
+          price: Number(product.price),
+          originalPrice: product.originalPrice ? Number(product.originalPrice) : null,
+          image: product.images && product.images.length > 0 ? product.images[0].url : '/placeholder.jpg',
+          images: product.images ? product.images.map(img => img.url) : [],
+          sold: product.salesCount || 0,
+          reviews: product.reviewCount || 0,
+          rating: product.rating || 0
+        }))
+      } else {
+        products.value = response.data || []
+      }
+      
+      console.log('Products loaded:', products.value.length)
       
     } catch (err) {
       error.value = err.response?.data?.message || '取得商品失敗'
@@ -116,7 +132,15 @@ export const useProductStore = defineStore('products', () => {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories')
-      categories.value = response.data?.data || response.data || []
+      
+      if (response.data?.success && response.data?.data) {
+        categories.value = response.data.data
+      } else {
+        categories.value = response.data || []
+      }
+      
+      console.log('Categories loaded:', categories.value.length)
+      
     } catch (err) {
       console.error('Failed to fetch categories:', err)
       categories.value = []

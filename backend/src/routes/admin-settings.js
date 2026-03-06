@@ -227,4 +227,71 @@ router.post('/backup', async (req, res) => {
   }
 })
 
+// @desc    Get public settings (for frontend)
+// @route   GET /api/settings/public
+// @access  Public
+router.get('/public', async (req, res) => {
+  try {
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: {
+          in: ['paymentSettings', 'shippingSettings', 'storeSettings']
+        }
+      }
+    })
+    
+    // 將設定轉換為物件格式
+    const settingsObject = {}
+    settings.forEach(setting => {
+      try {
+        settingsObject[setting.key] = JSON.parse(setting.value)
+      } catch {
+        settingsObject[setting.key] = setting.value
+      }
+    })
+
+    // 提供預設設定
+    const defaultSettings = {
+      paymentSettings: {
+        methods: ['CREDIT_CARD', 'BANK_TRANSFER', 'LINE_PAY'],
+        creditCardFee: 2.75,
+        paypalFee: 3.4,
+        bankAccount: '123-456-789-012',
+        bankName: '中國信託銀行'
+      },
+      shippingSettings: {
+        methods: ['home_delivery', 'convenience_store'],
+        homeDeliveryFee: 150,
+        convenienceStoreFee: 60,
+        estimatedDays: 3,
+        returnDays: 7
+      },
+      storeSettings: {
+        defaultCurrency: 'TWD',
+        freeShippingThreshold: 1500,
+        shippingFee: 150,
+        taxRate: 5.0,
+        lowStockThreshold: 10,
+        autoConfirmOrders: true,
+        allowGuestCheckout: true
+      }
+    }
+
+    // 合併預設設定和資料庫設定
+    const finalSettings = { ...defaultSettings, ...settingsObject }
+
+    res.json({
+      success: true,
+      data: finalSettings
+    })
+
+  } catch (error) {
+    console.error('Get public settings error:', error)
+    res.status(500).json({
+      success: false,
+      message: '獲取系統設定失敗'
+    })
+  }
+})
+
 export default router

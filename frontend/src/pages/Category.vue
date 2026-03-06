@@ -68,6 +68,8 @@
         v-for="product in paginatedProducts"
         :key="product.id"
         :product="product"
+        :is-wishlisted="wishlistStore.isInWishlist(product.id)"
+        @toggle-wishlist="toggleWishlist"
       />
     </div>
 
@@ -121,10 +123,12 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProductStore } from '@/store/products'
+import { useWishlistStore } from '@/store/wishlist'
 import ProductCard from '@/components/product/ProductCard.vue'
 
 const route = useRoute()
 const productStore = useProductStore()
+const wishlistStore = useWishlistStore()
 
 const currentPage = ref(1)
 const pageSize = ref(12)
@@ -134,20 +138,16 @@ const filters = ref({
   material: ''
 })
 
-const categories = ref([
-  { id: 'necklaces', name: '項鍊', description: '精選天然水晶項鍊，展現優雅魅力' },
-  { id: 'bracelets', name: '手鍊', description: '時尚水晶手鍊，為您的手腕增添光彩' },
-  { id: 'earrings', name: '耳環', description: '精緻水晶耳環，點亮您的容顏' },
-  { id: 'rings', name: '戒指', description: '獨特設計水晶戒指，彰顯個人品味' }
-])
-
 const currentCategory = computed(() => {
-  return categories.value.find(cat => cat.id === route.params.category)
+  return productStore.categories.find(cat => cat.slug === route.params.category)
 })
 
 const filteredProducts = computed(() => {
+  const category = currentCategory.value
+  if (!category) return []
+  
   let products = productStore.products.filter(product => {
-    return product.category === route.params.category
+    return product.categoryId === category.id
   })
 
   // Apply price filter
@@ -210,13 +210,25 @@ const visiblePages = computed(() => {
   return pages
 })
 
+const toggleWishlist = (product) => {
+  if (wishlistStore.isInWishlist(product.id)) {
+    wishlistStore.removeItem(product.id)
+  } else {
+    wishlistStore.addItem(product)
+  }
+}
+
 // Reset pagination when filters change
 watch([filters, sortBy], () => {
   currentPage.value = 1
 }, { deep: true })
 
-onMounted(() => {
-  productStore.fetchProducts()
+onMounted(async () => {
+  // 載入商品和分類資料
+  await Promise.all([
+    productStore.fetchProducts(),
+    productStore.fetchCategories()
+  ])
 })
 </script>
 

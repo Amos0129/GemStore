@@ -40,7 +40,7 @@
             @click="selectedImage = image"
             :class="[
               'aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors',
-              selectedImage === image ? 'border-purple-600' : 'border-transparent hover:border-gray-300'
+              selectedImage === image ? 'border-blue-800' : 'border-transparent hover:border-gray-300'
             ]"
           >
             <img
@@ -71,7 +71,7 @@
           
           <div class="mb-6">
             <div class="flex items-center space-x-4">
-              <span class="text-3xl font-bold text-purple-600">NT$ {{ product.price.toLocaleString() }}</span>
+              <span class="text-3xl font-bold text-blue-800">NT$ {{ product.price.toLocaleString() }}</span>
               <span v-if="product.originalPrice" class="text-lg text-gray-500 line-through">
                 NT$ {{ product.originalPrice.toLocaleString() }}
               </span>
@@ -94,7 +94,7 @@
                 @click="selectedColor = color"
                 :class="[
                   'w-8 h-8 rounded-full border-2 transition-colors',
-                  selectedColor?.name === color.name ? 'border-purple-600' : 'border-gray-300'
+                  selectedColor?.name === color.name ? 'border-blue-800' : 'border-gray-300'
                 ]"
                 :style="{ backgroundColor: color.value }"
                 :title="color.name"
@@ -113,7 +113,7 @@
                 :class="[
                   'px-4 py-2 border rounded-md text-sm font-medium transition-colors',
                   selectedSize === size 
-                    ? 'border-purple-600 text-purple-600 bg-purple-50' 
+                    ? 'border-blue-800 text-blue-800 bg-blue-50' 
                     : 'border-gray-300 text-gray-700 hover:border-gray-400'
                 ]"
               >
@@ -148,7 +148,7 @@
         <div class="flex space-x-4 mb-8">
           <button
             @click="addToCart"
-            class="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+            class="flex-1 bg-blue-800 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
           >
             加入購物車
           </button>
@@ -214,7 +214,7 @@
             :class="[
               'py-2 px-1 border-b-2 font-medium text-sm',
               activeTab === tab.id
-                ? 'border-purple-500 text-purple-600'
+                ? 'border-blue-600 text-blue-800'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             ]"
           >
@@ -306,7 +306,7 @@
   <!-- Loading State -->
   <div v-else class="container mx-auto px-4 py-16">
     <div class="text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
       <p class="text-gray-600">載入中...</p>
     </div>
   </div>
